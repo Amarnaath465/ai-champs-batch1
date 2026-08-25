@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 01 — AI Champions Kick-off &amp; Enterprise Context</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0d1b2a;--blue:#1b2a4a;--accent:#2196f3;--green:#4caf50;--red:#f44336;--orange:#ff9800;--purple:#9c27b0;--bg:#f5f7fa;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08)}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:32px 40px;text-align:center}
+.header h1{font-size:1.8rem;margin-bottom:6px;font-weight:700}
+.header p{opacity:.85;font-size:.95rem;max-width:720px;margin:0 auto}
+.header .badge{display:inline-block;background:var(--accent);color:#fff;font-size:.7rem;padding:3px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.tab-bar{display:flex;gap:0;background:var(--navy);overflow-x:auto;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.tab-btn{flex:0 0 auto;padding:14px 20px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent;font-family:inherit}
+.tab-btn:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.05)}
+.tab-btn.active{color:#fff;border-bottom-color:var(--accent);background:rgba(255,255,255,.08)}
+.tab-content{display:none;padding:32px 40px 60px;max-width:1100px;margin:0 auto;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-size:1.5rem;font-weight:700;margin-bottom:8px;color:var(--navy)}
+.section-sub{color:var(--muted);margin-bottom:24px;font-size:.95rem}
+.cmp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.88rem}
+.cmp-table th{background:var(--navy);color:#fff;padding:12px 16px;text-align:left;font-weight:600}
+.cmp-table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+.cmp-table tr:hover td{background:rgba(33,150,243,.04)}
+.compare-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+.compare-panel{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border-top:4px solid}
+.compare-panel.old{border-top-color:var(--red)}
+.compare-panel.new{border-top-color:var(--green)}
+.compare-panel h3{font-size:1rem;margin-bottom:12px}
+.compare-panel ul{margin:0 0 0 18px;font-size:.85rem}
+.compare-panel li{margin-bottom:6px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px}
+.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);transition:.25s;cursor:pointer;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px;color:#fff;font-weight:700}
+.card h3{font-size:1.05rem;margin-bottom:8px}
+.card p{color:var(--muted);font-size:.88rem}
+.card-detail{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s ease;opacity:0;margin-top:0}
+.card.expanded .card-detail{max-height:800px;opacity:1;margin-top:16px}
+.card-detail-inner{background:var(--bg);border-radius:8px;padding:16px;font-size:.85rem;line-height:1.7}
+.card-detail-inner ul{margin:8px 0 8px 18px}
+.card-detail-inner li{margin-bottom:4px}
+.card .expand-hint{position:absolute;top:14px;right:14px;font-size:.7rem;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:10px}
+.card.expanded .expand-hint{display:none}
+.stat-callout{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);text-align:center;flex:1;min-width:140px}
+.stat-box .stat-num{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.stat-box .stat-label{font-size:.78rem;color:var(--muted);margin-top:4px}
+.pillar-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:20px 0}
+.pillar{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);text-align:center;border-top:4px solid;transition:.25s;cursor:pointer}
+.pillar:hover{transform:translateY(-3px)}
+.pillar h3{font-size:1.05rem;margin-bottom:8px}
+.pillar p{font-size:.85rem;color:var(--muted)}
+.pillar .pillar-icon{font-size:2rem;margin-bottom:10px}
+.pillar .pillar-detail{display:none;margin-top:12px;text-align:left;font-size:.82rem;background:var(--bg);border-radius:8px;padding:12px}
+.pillar.active .pillar-detail{display:block}
+.survey-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.survey-label{width:220px;font-size:.84rem;text-align:right;flex-shrink:0}
+.survey-track{flex:1;height:26px;background:var(--border);border-radius:13px;overflow:hidden}
+.survey-fill{height:100%;border-radius:13px;display:flex;align-items:center;padding:0 10px;color:#fff;font-size:.72rem;font-weight:700;transition:width .8s ease}
+.lifecycle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:20px 0}
+.lifecycle-item{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border-left:4px solid;cursor:pointer;transition:.25s}
+.lifecycle-item:hover{transform:translateY(-2px)}
+.lifecycle-item h4{font-size:.92rem;margin-bottom:6px}
+.lifecycle-item p{font-size:.8rem;color:var(--muted)}
+.lifecycle-item .pain-list{display:none;margin-top:10px;font-size:.82rem}
+.lifecycle-item.active .pain-list{display:block}
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0}
+.risk-card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border-left:4px solid var(--red);transition:.25s}
+.risk-card h4{font-size:.92rem;margin-bottom:6px;color:var(--red)}
+.risk-card p{font-size:.82rem;color:var(--muted)}
+.litmus-box{background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:2px solid var(--accent);border-radius:var(--radius);padding:24px 28px;margin:24px 0}
+.litmus-box h3{color:#1565c0;margin-bottom:8px;font-size:1.1rem}
+.litmus-box blockquote{font-style:italic;font-size:1rem;color:#1565c0;margin:12px 0;padding-left:16px;border-left:3px solid var(--accent)}
+.module-path{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0;justify-content:center}
+.module-node{background:var(--card);border-radius:8px;padding:10px 14px;text-align:center;box-shadow:var(--shadow);border:2px solid var(--border);font-size:.78rem;min-width:90px;transition:.2s}
+.module-node:hover{border-color:var(--accent);transform:scale(1.05)}
+.module-node.current{border-color:var(--accent);background:#e3f2fd;font-weight:700}
+.module-node h5{font-size:.85rem;margin-bottom:2px}
+.module-arrow{display:flex;align-items:center;color:var(--accent);font-weight:700;font-size:1.1rem}
+.quiz-container{max-width:720px;margin:0 auto}
+.quiz-question{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.quiz-question .q-num{display:inline-block;background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:.8rem;margin-right:8px}
+.quiz-question .q-text{font-weight:600;font-size:1rem;margin-bottom:16px;display:inline}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;font-size:.9rem;transition:.2s;display:flex;align-items:center;gap:10px}
+.quiz-opt:hover{border-color:var(--accent);background:rgba(33,150,243,.04)}
+.quiz-opt .opt-letter{width:28px;height:28px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;transition:.2s}
+.quiz-opt:hover .opt-letter{background:var(--accent);color:#fff}
+.quiz-opt.correct{border-color:var(--green);background:#e8f5e9}
+.quiz-opt.correct .opt-letter{background:var(--green);color:#fff}
+.quiz-opt.wrong{border-color:var(--red);background:#ffebee}
+.quiz-opt.wrong .opt-letter{background:var(--red);color:#fff}
+.quiz-opt.disabled{pointer-events:none;opacity:.85}
+.quiz-feedback{margin-top:12px;padding:12px 16px;border-radius:8px;font-size:.85rem;display:none;line-height:1.6}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct-fb{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+.quiz-feedback.wrong-fb{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c}
+.quiz-progress{background:var(--card);border-radius:var(--radius);padding:16px 24px;margin-bottom:28px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.quiz-progress .progress-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.quiz-progress .progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
+.quiz-progress .progress-text{font-size:.85rem;color:var(--muted);font-weight:600;white-space:nowrap}
+@media(max-width:768px){.tab-btn{padding:10px 14px;font-size:.75rem}.tab-content{padding:20px 16px 40px}.compare-panels,.pillar-cards{grid-template-columns:1fr}.header h1{font-size:1.3rem}.survey-label{width:140px;font-size:.75rem}}
+</style>
+</head>
+<body>
+<div class="header">
+  <span class="badge">AI Champions Programme</span>
+  <h1>Module 01 — AI Champions Kick-off &amp; Enterprise Context</h1>
+  <p>Establish the enterprise context, the AI Champion role model, and shared vocabulary. Surface pain points, map current vs target state, and define success metrics.</p>
+</div>
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="overview">Programme Overview</button>
+  <button class="tab-btn" data-tab="champion">AI Champion Role</button>
+  <button class="tab-btn" data-tab="cohort">Cohort Profile</button>
+  <button class="tab-btn" data-tab="current">Current State</button>
+  <button class="tab-btn" data-tab="target">Target State</button>
+  <button class="tab-btn" data-tab="risks">Risks &amp; Litmus Test</button>
+  <button class="tab-btn" data-tab="quiz">Self-Check Quiz</button>
+</div>
+
+<!-- TAB 1: PROGRAMME OVERVIEW -->
+<div class="tab-content active" id="tab-overview">
+  <h2 class="section-title">Programme Overview &amp; Incremental Journey</h2>
+  <p class="section-sub">12 modules building from enterprise context to capstone delivery. Each module builds on the previous one.</p>
+  <div class="stat-callout">
+    <div class="stat-box"><div class="stat-num">12</div><div class="stat-label">Modules total</div></div>
+    <div class="stat-box"><div class="stat-num">24h</div><div class="stat-label">Total duration</div></div>
+    <div class="stat-box"><div class="stat-num">19</div><div class="stat-label">Participants</div></div>
+    <div class="stat-box"><div class="stat-num">68%</div><div class="stat-label">8+ years experience</div></div>
+  </div>
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">The 12-Module Journey</h3>
+  <div class="module-path">
+    <div class="module-node current"><h5>M01</h5>Enterprise Context</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M02</h5>Copilot Features</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M03</h5>Prompt/Context Eng.</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M04</h5>SDD</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M05</h5>Green/Brownfield</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M06</h5>Testing</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M07</h5>MCP</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M08</h5>Rovo Studio</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M09</h5>PR/QA</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M10</h5>Agent Prism</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M11</h5>ROI/Tokens</div><div class="module-arrow">&rarr;</div>
+    <div class="module-node"><h5>M12</h5>Capstone</div>
+  </div>
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Incremental Build Philosophy</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Module</th><th>Focus</th><th>Builds On</th></tr></thead>
+    <tbody>
+      <tr><td><strong>M01</strong></td><td>Establish WHY (enterprise context, pain points, metrics)</td><td>&mdash;</td></tr>
+      <tr><td><strong>M02</strong></td><td>Learn WHAT tools are available (Copilot capabilities)</td><td>M01</td></tr>
+      <tr><td><strong>M03</strong></td><td>Learn HOW to use them (prompt/context engineering)</td><td>M02</td></tr>
+      <tr><td><strong>M04</strong></td><td>Apply structured approach (SDD)</td><td>M03</td></tr>
+      <tr><td><strong>M05</strong></td><td>Build greenfield + brownfield (complete SDLC)</td><td>M04</td></tr>
+      <tr><td><strong>M06</strong></td><td>Validate with testing (strategy, mocks, regression)</td><td>M05</td></tr>
+      <tr><td><strong>M07</strong></td><td>Extend with MCP (tool integration, reusable skills)</td><td>M06</td></tr>
+      <tr><td><strong>M08</strong></td><td>Studio-style workflows (Atlassian Rovo Studio)</td><td>M07</td></tr>
+      <tr><td><strong>M09</strong></td><td>Automate quality (PR/LLM-as-Judge)</td><td>M08</td></tr>
+      <tr><td><strong>M10</strong></td><td>Monitor and observe (Agent Prism)</td><td>M09</td></tr>
+      <tr><td><strong>M11</strong></td><td>Measure value (ROI, token economics)</td><td>M10</td></tr>
+      <tr><td><strong>M12</strong></td><td>Demonstrate adoption (capstone, 90-day roadmap)</td><td>M11</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TAB 2: AI CHAMPION ROLE -->
+<div class="tab-content" id="tab-champion">
+  <h2 class="section-title">The AI Champion Role Model</h2>
+  <p class="section-sub">Click each pillar to see responsibilities and activities. An AI Champion bridges AI potential and embedded engineering reality.</p>
+  <div class="pillar-cards">
+    <div class="pillar" style="border-top-color:#2196f3" onclick="togglePillar(this)">
+      <div class="pillar-icon">&#x1F527;</div>
+      <h3 style="color:#2196f3">Technical Expert</h3>
+      <p>Master AI tools and embed them into daily workflows</p>
+      <div class="pillar-detail">
+        <strong>Key Activities:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li>Copilot proficiency and best practices</li>
+          <li>Prompt engineering mastery</li>
+          <li>Context engineering for repositories</li>
+          <li>MCP integration and tool connections</li>
+          <li>Model selection strategy</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pillar" style="border-top-color:#4caf50" onclick="togglePillar(this)">
+      <div class="pillar-icon">&#x26A1;</div>
+      <h3 style="color:#4caf50">Process Catalyst</h3>
+      <p>Drive adoption of spec-driven development and testing</p>
+      <div class="pillar-detail">
+        <strong>Key Activities:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li>SDD champion across the team</li>
+          <li>Testing discipline and strategy</li>
+          <li>Workflow optimization</li>
+          <li>Brownfield safety practices</li>
+          <li>Knowledge sharing and unblocking peers</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pillar" style="border-top-color:#9c27b0" onclick="togglePillar(this)">
+      <div class="pillar-icon">&#x1F6E1;</div>
+      <h3 style="color:#9c27b0">Governance Guardian</h3>
+      <p>Ensure responsible, measurable, and secure AI usage</p>
+      <div class="pillar-detail">
+        <strong>Key Activities:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li>Token oversight and cost control</li>
+          <li>Quality gates enforcement</li>
+          <li>Security and compliance monitoring</li>
+          <li>ROI tracking and reporting</li>
+          <li>Org blocker escalation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Why This Matters for Honeywell</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card" style="cursor:default;border-top:3px solid var(--red)"><h3>&#x26A1; Hardware-Software Boundaries</h3><p>AI-generated code must respect physical hardware constraints and HAL interfaces</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--orange)"><h3>&#x23F1; Real-Time Requirements</h3><p>AI suggestions must meet strict timing constraints for deterministic behavior</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--purple)"><h3>&#x1F4BE; Resource Limitations</h3><p>Memory, CPU, and power constraints that AI must understand and respect</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid #1565c0"><h3>&#x1F4CB; Regulatory Compliance</h3><p>DO-178C, IEC 61508 and other standards govern all changes</p></div>
+  </div>
+</div>
+
+<!-- TAB 3: COHORT PROFILE -->
+<div class="tab-content" id="tab-cohort">
+  <h2 class="section-title">Cohort Profile &amp; Calibration Insights</h2>
+  <p class="section-sub">Pre-programme survey of 19 participants shapes every module. Hover over bars for details.</p>
+  <h3 style="margin-bottom:16px;font-size:1.05rem">AI Usage Maturity</h3>
+  <div class="survey-bar"><span class="survey-label">Use it daily</span><div class="survey-track"><div class="survey-fill" style="width:32%;background:#1565c0">32% (6)</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Use it regularly</span><div class="survey-track"><div class="survey-fill" style="width:53%;background:#2e7d32">53% (10)</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Tried occasionally</span><div class="survey-track"><div class="survey-fill" style="width:16%;background:#ff8f00">16% (3)</div></div></div>
+  <p style="font-size:.85rem;color:var(--muted);margin:8px 0 24px"><strong>84%</strong> already use Copilot regularly/daily &mdash; this is capability deepening, not first exposure.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Training Priorities (Pick up to 3)</h3>
+  <div class="survey-bar"><span class="survey-label">Learn MCP &amp; agentic workflows</span><div class="survey-track"><div class="survey-fill" style="width:68%;background:#1565c0">68%</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Use tokens more efficiently</span><div class="survey-track"><div class="survey-fill" style="width:37%;background:#2e7d32">37%</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Improve engineering productivity</span><div class="survey-track"><div class="survey-fill" style="width:37%;background:#2e7d32">37%</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Improve code quality</span><div class="survey-track"><div class="survey-fill" style="width:26%;background:#ff8f00">26%</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Understand existing code faster</span><div class="survey-track"><div class="survey-fill" style="width:21%;background:#6a1b9a">21%</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Improve testing</span><div class="survey-track"><div class="survey-fill" style="width:21%;background:#6a1b9a">21%</div></div></div>
+  <p style="font-size:.85rem;color:var(--muted);margin:8px 0 24px"><strong>MCP is #1 priority</strong> by wide margin (68%) &mdash; Module 7 is highest-leverage for this cohort.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Where Human Review is Non-Negotiable</h3>
+  <div class="survey-bar"><span class="survey-label">Timing behaviour</span><div class="survey-track"><div class="survey-fill" style="width:74%;background:#c62828">#1 - 14 mentions</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Memory safety</span><div class="survey-track"><div class="survey-fill" style="width:63%;background:#e65100">#2 - 12 mentions</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Error handling</span><div class="survey-track"><div class="survey-fill" style="width:53%;background:#ff8f00">#3 - 10 mentions</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Hardware/driver boundaries</span><div class="survey-track"><div class="survey-fill" style="width:47%;background:#2e7d32">#4 - 9 mentions</div></div></div>
+  <div class="survey-bar"><span class="survey-label">Concurrency</span><div class="survey-track"><div class="survey-fill" style="width:37%;background:#1565c0">#5 - 7 mentions</div></div></div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Key Calibration Implications</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Finding</th><th>Programme Response</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Senior audience (68% at 8+ yrs)</strong></td><td>Move quickly through fundamentals; more time on AI technique</td></tr>
+      <tr><td><strong>84% already using Copilot</strong></td><td>M02 fast-paths basics into agent mode, reusable instructions</td></tr>
+      <tr><td><strong>79% already spec-led</strong></td><td>M04 formalises and tools an existing instinct</td></tr>
+      <tr><td><strong>42% have little automated validation</strong></td><td>M06 (test strategy) is highest-value for risk reduction</td></tr>
+      <tr><td><strong>MCP is top want (68%)</strong></td><td>M07 must be protected from time compression</td></tr>
+      <tr><td><strong>PR-approval on non-functional criteria</strong></td><td>M09 rubric scores memory/pattern as first-class gates</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TAB 4: CURRENT STATE -->
+<div class="tab-content" id="tab-current">
+  <h2 class="section-title">Current State: Pain Points</h2>
+  <p class="section-sub">Click each lifecycle stage to see the pain points teams face today.</p>
+  <div class="lifecycle-grid">
+    <div class="lifecycle-item" style="border-left-color:#1565c0" onclick="toggleLifecycle(this)">
+      <h4 style="color:#1565c0">&#x1F4DD; Requirements &amp; Spec</h4>
+      <p>Specification gaps and inconsistency</p>
+      <div class="pain-list">
+        <ul style="margin:0 0 0 16px"><li>Missing acceptance criteria</li><li>Incomplete interface contracts</li><li>No timing/resource constraints documented</li><li>Traceability gaps between spec and code</li></ul>
+      </div>
+    </div>
+    <div class="lifecycle-item" style="border-left-color:#2e7d32" onclick="toggleLifecycle(this)">
+      <h4 style="color:#2e7d32">&#x1F3D7; Architecture &amp; Design</h4>
+      <p>Design pattern violations</p>
+      <div class="pain-list">
+        <ul style="margin:0 0 0 16px"><li>Silent architecture violations</li><li>HAL boundary confusion</li><li>Inconsistent module structure</li></ul>
+      </div>
+    </div>
+    <div class="lifecycle-item" style="border-left-color:#ff8f00" onclick="toggleLifecycle(this)">
+      <h4 style="color:#ff8f00">&#x1F4BB; Implementation</h4>
+      <p>Manual, repetitive work</p>
+      <div class="pain-list">
+        <ul style="margin:0 0 0 16px"><li>Manual code analysis of C/C++ repos</li><li>Repetitive firmware changes</li><li>Inconsistent code generation quality</li><li>Time-consuming header navigation</li></ul>
+      </div>
+    </div>
+    <div class="lifecycle-item" style="border-left-color:#c62828" onclick="toggleLifecycle(this)">
+      <h4 style="color:#c62828">&#x2699; Build &amp; Toolchain</h4>
+      <p>Toolchain complexity</p>
+      <div class="pain-list">
+        <ul style="margin:0 0 0 16px"><li>Closed-toolchain/RTOS hallucination</li><li>Build configuration drift</li><li>Cross-compilation issues</li></ul>
+      </div>
+    </div>
+    <div class="lifecycle-item" style="border-left-color:#6a1b9a" onclick="toggleLifecycle(this)">
+      <h4 style="color:#6a1b9a">&#x1F9EA; Test &amp; Validation</h4>
+      <p>Insufficient test coverage</p>
+      <div class="pain-list">
+        <ul style="margin:0 0 0 16px"><li>Manual test creation</li><li>Incomplete boundary/negative testing</li><li>Missing mocks for hardware</li><li>42% have little more than compile check</li></ul>
+      </div>
+    </div>
+    <div class="lifecycle-item" style="border-left-color:#009688" onclick="toggleLifecycle(this)">
+      <h4 style="color:#009688">&#x1F441; PR Review</h4>
+      <p>Review latency and inconsistency</p>
+      <div class="pain-list">
+        <ul style="margin:0 0 0 16px"><li>Latency in PR review cycles</li><li>Inconsistent review quality</li><li>No automated quality gates</li><li>Manual regression risk assessment</li></ul>
+      </div>
+    </div>
+  </div>
+  <div class="warning-banner">
+    <div class="warn-icon">&#x26A0;&#xFE0F;</div>
+    <div class="warn-text">
+      <h4>AI Usage Blind Spots</h4>
+      <p>No visibility into token consumption &bull; Untracked AI-assisted changes &bull; No quality measurement of AI output &bull; Cost leakage without governance &bull; Inconsistent adoption across teams</p>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 5: TARGET STATE -->
+<div class="tab-content" id="tab-target">
+  <h2 class="section-title">Target State: AI-Enabled Embedded Engineering</h2>
+  <p class="section-sub">The vision of what good looks like once AI is properly governed and integrated.</p>
+  <div class="compare-panels">
+    <div class="compare-panel old">
+      <h3>&#x274C; Current State</h3>
+      <ul>
+        <li>Ad-hoc prompting (53%)</li>
+        <li>Manual code analysis</li>
+        <li>Inconsistent review quality</li>
+        <li>No traceability</li>
+        <li>Zero cost/usage visibility</li>
+        <li>42% have little automated validation</li>
+      </ul>
+    </div>
+    <div class="compare-panel new">
+      <h3>&#x2705; Target State</h3>
+      <ul>
+        <li>Structured context engineering</li>
+        <li>Repository-aware AI assistance</li>
+        <li>LLM-as-Judge PR review</li>
+        <li>Full spec-to-code traceability</li>
+        <li>Token monitoring &amp; cost tracking</li>
+        <li>Automated quality gates</li>
+      </ul>
+    </div>
+  </div>
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Target State by Area</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card" style="cursor:default;border-top:3px solid #1565c0"><h3>&#x1F4DD; Specification-Driven Dev</h3><p>Structured specs, acceptance criteria, context-aware AI, repo-aware generation</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid #2e7d32"><h3>&#x2705; Automated Quality Gates</h3><p>LLM-as-Judge review, standards enforcement, test evidence, regression assessment</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid #ff8f00"><h3>&#x1F4B0; Governed AI Usage</h3><p>Token monitoring, cost tracking, quality measurement, adoption tracking, ROI visibility</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid #6a1b9a"><h3>&#x1F50C; MCP Tool Integration</h3><p>Approved tool connections, build/test automation, doc generation, governed permissions</p></div>
+  </div>
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Success Metrics Baseline vs Target</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Metric</th><th>Baseline Today</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td>Spec-led patterns</td><td>79%</td><td style="color:var(--green);font-weight:700">100%</td></tr>
+      <tr><td>Acceptance criteria coverage</td><td>40%</td><td style="color:var(--green);font-weight:700">90%</td></tr>
+      <tr><td>Traceability completeness</td><td>20%</td><td style="color:var(--green);font-weight:700">80%</td></tr>
+      <tr><td>First-pass success</td><td>30%</td><td style="color:var(--green);font-weight:700">70%</td></tr>
+      <tr><td>Agent mode usage</td><td>42%</td><td style="color:var(--green);font-weight:700">80%</td></tr>
+      <tr><td>PR review assistance</td><td>32%</td><td style="color:var(--green);font-weight:700">70%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TAB 6: RISKS & LITMUS TEST -->
+<div class="tab-content" id="tab-risks">
+  <h2 class="section-title">Risk Patterns &amp; Litmus Test</h2>
+  <p class="section-sub">Unmanaged AI usage creates real engineering risks in safety-critical embedded systems.</p>
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Common Risk Patterns</h3>
+  <div class="risk-grid">
+    <div class="risk-card"><h4>&#x1F4A5; Silent Architecture/Standards Violations</h4><p>AI generates code that compiles and runs but breaks architectural patterns or coding standards without obvious warning signs.</p></div>
+    <div class="risk-card"><h4>&#x1F504; Hard-to-Diagnose Brownfield Regressions</h4><p>AI modifications to existing firmware introduce subtle behavioral changes that escape basic testing.</p></div>
+    <div class="risk-card"><h4>&#x1F914; Closed-Toolchain/RTOS Hallucination</h4><p>AI suggests code using APIs, libraries, or RTOS features that don't exist in the target toolchain.</p></div>
+    <div class="risk-card"><h4>&#x1F4DD; Spec-Free Prompt-Only Development</h4><p>Skipping specification leads to inconsistent interpretation, missing acceptance criteria, and rework cycles.</p></div>
+    <div class="risk-card"><h4>&#x1F4C8; Context Inflation/Token Waste</h4><p>Dumping entire repositories into prompts wastes tokens and dilutes context, producing lower quality output.</p></div>
+    <div class="risk-card"><h4>&#x1F4B0; Zero Cost/Usage Visibility</h4><p>No tracking of AI consumption means cost leakage, unmeasured quality, and no ROI data for governance.</p></div>
+  </div>
+  <div class="litmus-box">
+    <h3>&#x1F9ED; The Litmus Test</h3>
+    <blockquote>&ldquo;Would we approve a PR that compiles, passes tests, and meets spec &mdash; but uses more memory than budgeted, breaks a design pattern, or regresses timing under load?&rdquo;</blockquote>
+    <p style="font-size:.9rem;margin-top:12px;color:#1565c0"><strong>Near-unanimous NO</strong> from the cohort. Passing tests and meeting spec are <em>necessary but not sufficient</em>. Non-functional criteria (memory, timing, patterns) must be first-class gates, not soft advisories.</p>
+  </div>
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">12-Month Vision (Cohort Themes)</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card" style="cursor:default;border-top:3px solid var(--accent)"><h3>&#x26A1; Faster Development Cycles</h3><p>Less time on routine coding, AI absorbing repetitive work, faster debug cycles</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--green)"><h3>&#x2728; Higher Provable Quality</h3><p>Proactive defect detection, stronger automated test generation, measurable quality</p></div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--purple)"><h3>&#x1F4D6; Better Knowledge Access</h3><p>AI-powered documentation reducing tribal-knowledge dependency, faster onboarding</p></div>
+  </div>
+</div>
+
+<!-- TAB 7: QUIZ -->
+<div class="tab-content" id="tab-quiz">
+  <h2 class="section-title">Self-Check Quiz</h2>
+  <p class="section-sub">Test your understanding of Module 01 concepts. Click an answer to check immediately.</p>
+  <div class="quiz-container">
+    <div class="quiz-progress">
+      <div class="progress-bar"><div class="progress-fill" id="quizProgressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="quizProgressText">0 / 5 answered</div>
+    </div>
+    <div class="quiz-question" id="q1">
+      <span class="q-num">1</span>
+      <span class="q-text">What are the three pillars of the AI Champion role model?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">A</span> Developer, Tester, Manager</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">B</span> Technical Expert, Process Catalyst, Governance Guardian</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">C</span> Architect, Lead, Sponsor</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">D</span> Builder, Reviewer, Deployer</div>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+    <div class="quiz-question" id="q2">
+      <span class="q-num">2</span>
+      <span class="q-text">According to the calibration survey, what is the #1 training priority for this cohort?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'a')"><span class="opt-letter">A</span> Learn MCP and agentic workflows (68%)</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'a')"><span class="opt-letter">B</span> Use tokens more efficiently (37%)</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'a')"><span class="opt-letter">C</span> Improve code quality (26%)</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'a')"><span class="opt-letter">D</span> Write code faster (11%)</div>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+    <div class="quiz-question" id="q3">
+      <span class="q-num">3</span>
+      <span class="q-text">What percentage of the cohort already uses Copilot regularly or daily?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'c')"><span class="opt-letter">A</span> 42%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'c')"><span class="opt-letter">B</span> 68%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'c')"><span class="opt-letter">C</span> 84%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'c')"><span class="opt-letter">D</span> 79%</div>
+      </div>
+      <div class="quiz-feedback" id="q3-feedback"></div>
+    </div>
+    <div class="quiz-question" id="q4">
+      <span class="q-num">4</span>
+      <span class="q-text">In the litmus test scenario, the cohort nearly unanimously said NO to approving a PR that:</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">A</span> Has no unit tests</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">B</span> Was written by AI instead of a human</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">C</span> Uses a different coding style</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">D</span> Compiles and passes tests but exceeds memory budget or breaks timing</div>
+      </div>
+      <div class="quiz-feedback" id="q4-feedback"></div>
+    </div>
+    <div class="quiz-question" id="q5">
+      <span class="q-num">5</span>
+      <span class="q-text">Which area did the cohort rank as the #1 non-negotiable for human review?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">A</span> Memory safety</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">B</span> Timing behaviour (14 mentions)</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">C</span> Error handling</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">D</span> Coding standards</div>
+      </div>
+      <div class="quiz-feedback" id="q5-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const tabBtns=document.querySelectorAll('.tab-btn'),tabContents=document.querySelectorAll('.tab-content');
+tabBtns.forEach(b=>{b.addEventListener('click',()=>{tabBtns.forEach(x=>x.classList.remove('active'));tabContents.forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('tab-'+b.dataset.tab).classList.add('active')})});
+function toggleCard(el){const w=el.classList.contains('expanded');document.querySelectorAll('.card.expanded').forEach(c=>c.classList.remove('expanded'));if(!w)el.classList.add('expanded')}
+function togglePillar(el){const w=el.classList.contains('active');document.querySelectorAll('.pillar.active').forEach(p=>p.classList.remove('active'));if(!w)el.classList.add('active')}
+function toggleLifecycle(el){const w=el.classList.contains('active');document.querySelectorAll('.lifecycle-item.active').forEach(l=>l.classList.remove('active'));if(!w)el.classList.add('active')}
+const CA={q1:'B',q2:'A',q3:'C',q4:'D',q5:'B'};
+const EX={q1:{c:'Correct! The AI Champion has three pillars: Technical Expert (master AI tools), Process Catalyst (drive SDD and testing), and Governance Guardian (token oversight, quality gates, compliance).',w:'Not quite. The three pillars are Technical Expert (master AI tools), Process Catalyst (drive SDD and testing), and Governance Guardian (ensure responsible, measurable AI usage).'},q2:{c:'Correct! MCP (Model Context Protocol) is the #1 training priority at 68%. Module 7 is the highest-leverage module for this cohort.',w:'Not quite. MCP and agentic workflows ranked #1 at 68% — the highest priority by a wide margin.'},q3:{c:'Correct! 84% of the cohort already uses Copilot regularly or daily. This programme is positioned as capability deepening, not first exposure.',w:'Not quite. 84% (32% daily + 53% regularly) already use Copilot. Only 16% have tried it occasionally.'},q4:{c:'Correct! The cohort said NO to a PR that compiles, passes tests, and meets spec but exceeds memory budget, breaks design patterns, or regresses timing. Non-functional criteria are first-class gates.',w:'Not quite. The litmus test: a PR that compiles, passes tests, meets spec — but uses more memory than budgeted, breaks a design pattern, or regresses timing. The answer was nearly unanimously NO.'},q5:{c:'Correct! Timing behaviour was ranked #1 non-negotiable with 14 mentions, followed by memory safety (12) and error handling (10).',w:'Not quite. Timing behaviour ranked #1 with 14 mentions. Memory safety was #2 with 12, error handling #3 with 10.'}};
+let ans=0;
+function checkAnswer(qid,el,cl){const q=document.getElementById(qid);if(q.classList.contains('answered'))return;q.classList.add('answered');ans++;const opts=q.querySelectorAll('.quiz-opt'),sl=el.querySelector('.opt-letter').textContent,ok=sl===CA[qid];opts.forEach(o=>{o.classList.add('disabled');if(o.querySelector('.opt-letter').textContent===CA[qid])o.classList.add('correct')});if(!ok)el.classList.add('wrong');const fb=document.getElementById(qid+'-feedback');fb.textContent=ok?EX[qid].c:EX[qid].w;fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');document.getElementById('quizProgressFill').style.width=(ans/5*100)+'%';document.getElementById('quizProgressText').textContent=ans+' / 5 answered'}
+</script>
+</body>
+</html>
