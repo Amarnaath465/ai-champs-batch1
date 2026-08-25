@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 02 — GitHub Copilot Enterprise for Embedded Engineering</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d1b2a;--blue:#1b2a4a;--accent:#2196f3;--accent2:#00bcd4;
+  --green:#4caf50;--red:#f44336;--orange:#ff9800;--purple:#9c27b0;
+  --bg:#f5f7fa;--card:#fff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08);
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+
+/* Header */
+.header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:32px 40px;text-align:center}
+.header h1{font-size:1.8rem;margin-bottom:6px;font-weight:700}
+.header p{opacity:.85;font-size:.95rem;max-width:700px;margin:0 auto}
+.header .badge{display:inline-block;background:var(--accent);color:#fff;font-size:.7rem;padding:3px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+
+/* Tab Bar */
+.tab-bar{display:flex;gap:0;background:var(--navy);overflow-x:auto;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.tab-btn{flex:0 0 auto;padding:14px 20px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent;font-family:inherit}
+.tab-btn:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.05)}
+.tab-btn.active{color:#fff;border-bottom-color:var(--accent);background:rgba(255,255,255,.08)}
+
+/* Tab Content */
+.tab-content{display:none;padding:32px 40px 60px;max-width:1100px;margin:0 auto;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Section Titles */
+.section-title{font-size:1.5rem;font-weight:700;margin-bottom:8px;color:var(--navy)}
+.section-sub{color:var(--muted);margin-bottom:24px;font-size:.95rem}
+
+/* Cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px}
+.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);transition:.25s;cursor:pointer;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px;color:#fff;font-weight:700}
+.card h3{font-size:1.05rem;margin-bottom:8px}
+.card p{color:var(--muted);font-size:.88rem}
+
+/* Expandable Detail */
+.card-detail{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s ease;opacity:0;margin-top:0}
+.card.expanded .card-detail{max-height:800px;opacity:1;margin-top:16px}
+.card-detail-inner{background:var(--bg);border-radius:8px;padding:16px;font-size:.85rem;line-height:1.7}
+.card-detail-inner ul{margin:8px 0 8px 18px}
+.card-detail-inner li{margin-bottom:4px}
+.card .expand-hint{position:absolute;top:14px;right:14px;font-size:.7rem;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:10px;transition:.2s}
+.card.expanded .expand-hint{display:none}
+
+/* Architecture Tier Diagram */
+.tier-diagram{display:flex;flex-direction:column;align-items:center;gap:0;margin:24px 0}
+.tier{width:100%;max-width:700px;border-radius:var(--radius);padding:20px 28px;text-align:center;position:relative;transition:.3s;cursor:pointer;border:2px solid transparent}
+.tier:hover{transform:scale(1.02)}
+.tier h3{font-size:1.1rem;margin-bottom:6px}
+.tier .tier-features{text-align:left;display:inline-block;font-size:.85rem;margin-top:8px}
+.tier .tier-features li{margin-bottom:3px;list-style:none}
+.tier .tier-features li::before{content:'✓ ';color:var(--green);font-weight:700}
+.tier-individual{background:linear-gradient(135deg,#e3f2fd,#bbdefb);color:#1565c0}
+.tier-business{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);color:#2e7d32}
+.tier-enterprise{background:linear-gradient(135deg,#ede7f6,#d1c4e9);color:#4527a0}
+.tier-arrow{font-size:1.8rem;color:var(--muted);line-height:1;margin:4px 0}
+
+/* Comparison Table */
+.cmp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.88rem}
+.cmp-table th{background:var(--navy);color:#fff;padding:12px 16px;text-align:left;font-weight:600}
+.cmp-table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+.cmp-table tr:hover td{background:rgba(33,150,243,.04)}
+.cmp-table .check{color:var(--green);font-weight:700}
+.cmp-table .dash{color:var(--muted)}
+
+/* Flow Diagram */
+.flow{display:flex;align-items:center;justify-content:center;gap:0;margin:24px 0;flex-wrap:wrap}
+.flow-step{background:var(--card);border-radius:var(--radius);padding:18px 22px;text-align:center;box-shadow:var(--shadow);border:2px solid var(--border);min-width:160px;transition:.25s;cursor:pointer}
+.flow-step:hover{border-color:var(--accent);transform:translateY(-2px)}
+.flow-step .step-num{width:32px;height:32px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;margin:0 auto 10px}
+.flow-step h4{font-size:.92rem;margin-bottom:4px}
+.flow-step p{font-size:.78rem;color:var(--muted)}
+.flow-arrow{font-size:1.6rem;color:var(--accent);margin:0 8px;flex-shrink:0}
+
+/* Model Matrix */
+.matrix{width:100%;border-collapse:collapse;margin:20px 0;font-size:.85rem}
+.matrix th{padding:12px;background:var(--navy);color:#fff;text-align:center;font-weight:600}
+.matrix td{padding:12px;text-align:center;border:1px solid var(--border);cursor:pointer;transition:.2s}
+.matrix td:hover{transform:scale(1.05);z-index:1;position:relative}
+.matrix .fast{background:#e8f5e9;color:#2e7d32}
+.matrix .balanced{background:#e3f2fd;color:#1565c0}
+.matrix .premium{background:#f3e5f5;color:#6a1b9a}
+.matrix td.selected{outline:3px solid var(--accent);outline-offset:-2px}
+
+/* Tooltip */
+.tooltip-box{background:var(--navy);color:#fff;padding:14px 18px;border-radius:8px;font-size:.84rem;line-height:1.6;margin-top:16px;display:none;animation:fadeIn .2s}
+.tooltip-box.show{display:block}
+
+/* Safety Cards */
+.safety-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:20px 0}
+.safety-card{background:var(--card);border-radius:var(--radius);padding:20px;border-left:4px solid;box-shadow:var(--shadow)}
+.safety-card.privacy{border-left-color:#2196f3}
+.safety-card.quality{border-left-color:#ff9800}
+.safety-card.compliance{border-left-color:#9c27b0}
+.safety-card h3{font-size:1rem;margin-bottom:8px}
+.safety-card ul{margin:0 0 0 18px;font-size:.85rem}
+.safety-card li{margin-bottom:5px}
+
+/* Warning Banner */
+.warning-banner{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid var(--orange);border-radius:var(--radius);padding:18px 24px;margin:24px 0;display:flex;gap:14px;align-items:flex-start}
+.warning-banner .warn-icon{font-size:1.8rem;flex-shrink:0}
+.warning-banner .warn-text h4{color:#e65100;margin-bottom:4px}
+.warning-banner .warn-text p{font-size:.85rem;color:#bf360c}
+
+/* Quiz */
+.quiz-container{max-width:720px;margin:0 auto}
+.quiz-question{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.quiz-question .q-num{display:inline-block;background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:.8rem;margin-right:8px}
+.quiz-question .q-text{font-weight:600;font-size:1rem;margin-bottom:16px;display:inline}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;font-size:.9rem;transition:.2s;display:flex;align-items:center;gap:10px}
+.quiz-opt:hover{border-color:var(--accent);background:rgba(33,150,243,.04)}
+.quiz-opt .opt-letter{width:28px;height:28px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;transition:.2s}
+.quiz-opt:hover .opt-letter{background:var(--accent);color:#fff}
+.quiz-opt.correct{border-color:var(--green);background:#e8f5e9}
+.quiz-opt.correct .opt-letter{background:var(--green);color:#fff}
+.quiz-opt.wrong{border-color:var(--red);background:#ffebee}
+.quiz-opt.wrong .opt-letter{background:var(--red);color:#fff}
+.quiz-opt.disabled{pointer-events:none;opacity:.85}
+.quiz-feedback{margin-top:12px;padding:12px 16px;border-radius:8px;font-size:.85rem;display:none;line-height:1.6}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct-fb{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+.quiz-feedback.wrong-fb{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c}
+
+/* Progress */
+.quiz-progress{background:var(--card);border-radius:var(--radius);padding:16px 24px;margin-bottom:28px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.quiz-progress .progress-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.quiz-progress .progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
+.quiz-progress .progress-text{font-size:.85rem;color:var(--muted);font-weight:600;white-space:nowrap}
+
+/* Stat Callout */
+.stat-callout{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);text-align:center;flex:1;min-width:140px}
+.stat-box .stat-num{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.stat-box .stat-label{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+/* Compare Panels */
+.compare-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+.compare-panel{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border-top:4px solid}
+.compare-panel.old{border-top-color:var(--muted)}
+.compare-panel.new{border-top-color:var(--accent)}
+.compare-panel h3{font-size:1rem;margin-bottom:12px}
+.compare-panel ul{margin:0 0 0 18px;font-size:.85rem}
+.compare-panel li{margin-bottom:6px}
+
+/* Responsive */
+@media(max-width:768px){
+  .tab-btn{padding:10px 14px;font-size:.75rem}
+  .tab-content{padding:20px 16px 40px}
+  .compare-panels{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg)}
+  .header h1{font-size:1.3rem}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">AI Champions Programme</span>
+  <h1>Module 02 — GitHub Copilot Enterprise for Embedded Engineering</h1>
+  <p>Interactive exploration of enterprise features, agent mode, model selection, and safe practices for embedded C/C++ teams.</p>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="arch">Enterprise Architecture</button>
+  <button class="tab-btn" data-tab="capabilities">Core Capabilities</button>
+  <button class="tab-btn" data-tab="agent">Agent Mode</button>
+  <button class="tab-btn" data-tab="workflow">Workflow Integration</button>
+  <button class="tab-btn" data-tab="models">Model Selection</button>
+  <button class="tab-btn" data-tab="safety">Safe Practices</button>
+  <button class="tab-btn" data-tab="quiz">Self-Check Quiz</button>
+</div>
+
+<!-- ===================== TAB 1: ENTERPRISE ARCHITECTURE ===================== -->
+<div class="tab-content active" id="tab-arch">
+  <h2 class="section-title">GitHub Copilot Enterprise Architecture</h2>
+  <p class="section-sub">Click each tier to see what it adds. Enterprise unlocks repository-aware assistance and knowledge bases critical for embedded engineering.</p>
+
+  <div class="stat-callout">
+    <div class="stat-box"><div class="stat-num">84%</div><div class="stat-label">Already use Copilot daily/regularly</div></div>
+    <div class="stat-box"><div class="stat-num">42%</div><div class="stat-label">Have tried Agent Mode</div></div>
+    <div class="stat-box"><div class="stat-num">32%</div><div class="stat-label">Use PR Review assistance</div></div>
+    <div class="stat-box"><div class="stat-num">68%</div><div class="stat-label">Prioritize MCP integration</div></div>
+  </div>
+
+  <div class="tier-diagram">
+    <div class="tier tier-individual" onclick="toggleTierDetail(this)">
+      <h3>GitHub Copilot Individual</h3>
+      <p style="font-size:.85rem">Foundation capabilities for individual developers</p>
+      <ul class="tier-features">
+        <li>Inline code suggestions</li>
+        <li>Chat (basic)</li>
+        <li>Code explanation</li>
+        <li>Basic refactoring</li>
+        <li>Test generation</li>
+      </ul>
+    </div>
+    <div class="tier-arrow">▼</div>
+    <div class="tier tier-business" onclick="toggleTierDetail(this)">
+      <h3>GitHub Copilot Business</h3>
+      <p style="font-size:.85rem">Adds organizational management and compliance</p>
+      <ul class="tier-features">
+        <li>Everything in Individual</li>
+        <li>Organization-wide policy management</li>
+        <li>IP indemnity</li>
+        <li>Content exclusions</li>
+        <li>Audit logs</li>
+      </ul>
+    </div>
+    <div class="tier-arrow">▼</div>
+    <div class="tier tier-enterprise" onclick="toggleTierDetail(this)">
+      <h3>GitHub Copilot Enterprise</h3>
+      <p style="font-size:.85rem">Full platform for repository-aware, context-rich assistance</p>
+      <ul class="tier-features">
+        <li>Everything in Business</li>
+        <li><strong>Knowledge bases</strong> (repo-aware indexing)</li>
+        <li><strong>Custom models</strong> (model selection)</li>
+        <li>GitHub.com integration</li>
+        <li>Terminal/CLI workflows</li>
+        <li>Advanced PR/code-review assistance</li>
+        <li>Reusable instructions &amp; skills</li>
+        <li>Fine-tuned models (optional)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px;margin-bottom:12px;font-size:1.1rem">Enterprise Value for Embedded Engineering</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Capability</th><th>Embedded Engineering Value</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Repository-aware assistance</strong></td><td>Understands C/C++ codebase structure, interfaces, HAL boundaries</td></tr>
+      <tr><td><strong>Knowledge bases</strong></td><td>Indexes firmware architecture, coding standards, design docs</td></tr>
+      <tr><td><strong>Model selection</strong></td><td>Choose optimal models for different engineering tasks</td></tr>
+      <tr><td><strong>PR/code-review assistance</strong></td><td>Validates against coding standards and design constraints</td></tr>
+      <tr><td><strong>Reusable instructions</strong></td><td>Consistent prompt patterns across embedded teams</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 2: CORE CAPABILITIES ===================== -->
+<div class="tab-content" id="tab-capabilities">
+  <h2 class="section-title">Core Copilot Capabilities</h2>
+  <p class="section-sub">Click any card to expand embedded-specific details, workflows, and example prompts.</p>
+
+  <div class="card-grid">
+    <!-- Card: Chat -->
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#2196f3,#1976d2)">&#x1F4AC;</div>
+      <h3>Chat &amp; Conversation</h3>
+      <p>Ask questions about code behavior, explain patterns, suggest improvements.</p>
+      <div class="card-detail">
+        <div class="card-detail-inner">
+          <strong>Basic Chat Capabilities</strong>
+          <ul>
+            <li>Ask questions about code behavior</li>
+            <li>Explain complex embedded patterns</li>
+            <li>Generate documentation</li>
+            <li>Suggest improvements</li>
+          </ul>
+          <strong>Advanced Embedded Chat</strong>
+          <ul>
+            <li>Explain state machine transitions</li>
+            <li>Analyze HAL boundary constraints</li>
+            <li>Review timing-sensitive code</li>
+            <li>Suggest interrupt handling patterns</li>
+            <li>Debug memory-constrained issues</li>
+            <li>Explain register-level operations</li>
+          </ul>
+          <div style="margin-top:10px;padding:10px;background:#e3f2fd;border-radius:6px;font-size:.82rem">
+            <strong>Example prompt:</strong> "Explain the state machine transitions in this UART driver. Which states can transition in interrupt context?"
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Inline -->
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#4caf50,#388e3c)">&#x270D;</div>
+      <h3>Inline Code Assistance</h3>
+      <p>Auto-complete C/C++ patterns, generate function bodies, add documentation.</p>
+      <div class="card-detail">
+        <div class="card-detail-inner">
+          <strong>Inline Features for Embedded</strong>
+          <table class="cmp-table" style="margin:8px 0">
+            <thead><tr><th>Feature</th><th>Embedded Use Case</th><th>Example Prompt</th></tr></thead>
+            <tbody>
+              <tr><td>Completion</td><td>Auto-complete C/C++ patterns</td><td>"Implement the ISR handler for UART0"</td></tr>
+              <tr><td>Multi-line</td><td>Generate function bodies</td><td>"Create the state machine transition table"</td></tr>
+              <tr><td>Comments</td><td>Add documentation</td><td>"Add Doxygen comments to this function"</td></tr>
+              <tr><td>Refactoring</td><td>Improve code structure</td><td>"Extract this HAL call into a wrapper"</td></tr>
+            </tbody>
+          </table>
+          <div style="margin-top:10px;padding:10px;background:#e8f5e9;border-radius:6px;font-size:.82rem">
+            <strong>Tip:</strong> Select code first, then trigger inline assistance for context-aware completions. Use <code>Tab</code> to accept, <code>Esc</code> to dismiss.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Code Explanation -->
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#ff9800,#f57c00)">&#x1F50D;</div>
+      <h3>Code Explanation</h3>
+      <p>Understand complex C/C++ logic, timing-critical code, and register operations.</p>
+      <div class="card-detail">
+        <div class="card-detail-inner">
+          <strong>Explanation Workflow</strong>
+          <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+            <span style="background:#fff3e0;padding:6px 12px;border-radius:6px;font-size:.8rem">1. Select Code</span>
+            <span style="color:var(--orange);font-weight:700">→</span>
+            <span style="background:#fff3e0;padding:6px 12px;border-radius:6px;font-size:.8rem">2. Explain Logic</span>
+            <span style="color:var(--orange);font-weight:700">→</span>
+            <span style="background:#fff3e0;padding:6px 12px;border-radius:6px;font-size:.8rem">3. Review Context</span>
+            <span style="color:var(--orange);font-weight:700">→</span>
+            <span style="background:#fff3e0;padding:6px 12px;border-radius:6px;font-size:.8rem">4. Apply Insights</span>
+          </div>
+          <strong>Embedded Use Cases</strong>
+          <ul>
+            <li>Complex C/C++ code with pointer arithmetic</li>
+            <li>State machine logic and transitions</li>
+            <li>Timing-critical code paths</li>
+            <li>Register-level hardware operations</li>
+            <li>Interrupt service routines</li>
+          </ul>
+          <div style="margin-top:10px;padding:10px;background:#fff3e0;border-radius:6px;font-size:.82rem">
+            <strong>Example prompt:</strong> "Explain the memory layout of this DMA buffer descriptor chain. What happens on overflow?"
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Debugging -->
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#f44336,#d32f2f)">&#x1F41B;</div>
+      <h3>Debugging &amp; Test Generation</h3>
+      <p>Analyze errors, fix issues, and generate unit/boundary/integration tests.</p>
+      <div class="card-detail">
+        <div class="card-detail-inner">
+          <strong>Debugging Workflow</strong>
+          <div style="display:flex;flex-direction:column;gap:8px;margin:10px 0">
+            <div style="background:#ffebee;padding:10px 14px;border-radius:6px;font-size:.82rem">
+              <strong>Step 1 — Error Analysis:</strong> Paste error/stack trace → Copilot explains root cause → Get fix suggestions
+            </div>
+            <div style="background:#ffebee;padding:10px 14px;border-radius:6px;font-size:.82rem">
+              <strong>Step 2 — Contextual Debugging:</strong> Select code section → Ask about memory/timing issues → Get debugging approach
+            </div>
+            <div style="background:#ffebee;padding:10px 14px;border-radius:6px;font-size:.82rem">
+              <strong>Step 3 — Fix Implementation:</strong> Apply suggested fix → Verify with build/test → Document the fix
+            </div>
+          </div>
+          <strong>Test Generation for Embedded</strong>
+          <table class="cmp-table" style="margin:8px 0">
+            <thead><tr><th>Test Type</th><th>Application</th></tr></thead>
+            <tbody>
+              <tr><td>Unit Tests</td><td>Test individual C functions</td></tr>
+              <tr><td>Boundary Tests</td><td>Memory/timing edge cases</td></tr>
+              <tr><td>Integration Tests</td><td>Module interactions</td></tr>
+              <tr><td>Mock Generation</td><td>Hardware dependency stubs</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 3: AGENT MODE ===================== -->
+<div class="tab-content" id="tab-agent">
+  <h2 class="section-title">Agent Mode &amp; Repository-Aware Assistance</h2>
+  <p class="section-sub">Agent Mode transforms Copilot from single-file assistant to multi-file repository partner.</p>
+
+  <div class="compare-panels">
+    <div class="compare-panel old">
+      <h3>&#x274C; Traditional Copilot</h3>
+      <ul>
+        <li>Single-file context</li>
+        <li>Manual file selection</li>
+        <li>Limited repository understanding</li>
+        <li>One-shot responses</li>
+        <li>No tool integration</li>
+      </ul>
+    </div>
+    <div class="compare-panel new">
+      <h3>&#x2705; Agent Mode</h3>
+      <ul>
+        <li>Multi-file repository context</li>
+        <li>Automatic file discovery</li>
+        <li>Repository structure understanding</li>
+        <li>Multi-step task execution</li>
+        <li>Tool integration (build, test, lint)</li>
+        <li>Iterative refinement</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin:24px 0 12px;font-size:1.05rem">What Agent Mode Discovers in Your Repository</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+    <div class="card" style="cursor:default;border-top:3px solid var(--accent)">
+      <div class="icon" style="background:var(--accent);width:40px;height:40px;font-size:1.1rem">&#x1F4C1;</div>
+      <h3>Codebase Indexing</h3>
+      <p>Understands C/C++ project structure and organization</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--green)">
+      <div class="icon" style="background:var(--green);width:40px;height:40px;font-size:1.1rem">&#x1F517;</div>
+      <h3>Interface Detection</h3>
+      <p>Identifies HAL boundaries and API contracts</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--orange)">
+      <div class="icon" style="background:var(--orange);width:40px;height:40px;font-size:1.1rem">&#x1F4CE;</div>
+      <h3>Dependency Analysis</h3>
+      <p>Maps include/import relationships across files</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--purple)">
+      <div class="icon" style="background:var(--purple);width:40px;height:40px;font-size:1.1rem">&#x2699;</div>
+      <h3>Build System Awareness</h3>
+      <p>Understands Make/CMake configuration and toolchain</p>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Agent Mode Use Cases for Embedded</h3>
+  <div class="flow" style="flex-direction:column;gap:16px;align-items:stretch;max-width:700px;margin:20px auto">
+    <div class="flow-step" style="text-align:left;border-left:4px solid var(--accent)">
+      <h4>&#x1F50D; Repository Analysis</h4>
+      <p>"Analyze this embedded repository and identify HAL boundaries, state machine implementations, configuration files, and test coverage gaps."</p>
+    </div>
+    <div class="flow-step" style="text-align:left;border-left:4px solid var(--green)">
+      <h4>&#x1F6E0; Feature Implementation</h4>
+      <p>"Implement a new UART driver that follows existing HAL patterns, maintains interface contracts, includes unit tests, and updates documentation."</p>
+    </div>
+    <div class="flow-step" style="text-align:left;border-left:4px solid var(--orange)">
+      <h4>&#x1F441; Code Review</h4>
+      <p>"Review this PR for coding standard compliance, timing-sensitive patterns, memory safety concerns, and interface contract violations."</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 4: WORKFLOW INTEGRATION ===================== -->
+<div class="tab-content" id="tab-workflow">
+  <h2 class="section-title">Enterprise Workflow Integration</h2>
+  <p class="section-sub">Copilot connects across your entire development workflow — from code to CI/CD.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Developer Workflow Architecture</h3>
+  <div class="flow">
+    <div class="flow-step" onclick="showWorkflowDetail('ide')">
+      <div class="step-num">1</div>
+      <h4>IDE</h4>
+      <p>VS Code / JetBrains</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="showWorkflowDetail('copilot')">
+      <div class="step-num">2</div>
+      <h4>Copilot Services</h4>
+      <p>Chat · Inline · Agent · PR</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="showWorkflowDetail('repo')">
+      <div class="step-num">3</div>
+      <h4>Repository</h4>
+      <p>C/C++ · Headers · Build · Tests</p>
+    </div>
+  </div>
+
+  <div id="workflowDetail" class="tooltip-box" style="margin-top:16px"></div>
+
+  <h3 style="margin:28px 0 16px;font-size:1.05rem">PR Review Workflow</h3>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <h4>PR Creation</h4>
+      <p>Copilot generates PR description, links issues, documents approach</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <h4>Automated Review</h4>
+      <p>Reviews code, checks standards, validates contracts</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <h4>Human Review</h4>
+      <p>Examine suggestions, apply domain expertise, approve</p>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Terminal / CLI Commands</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Command</th><th>Embedded Application</th></tr></thead>
+    <tbody>
+      <tr><td><code>copilot suggest</code></td><td>Get code suggestions in terminal</td></tr>
+      <tr><td><code>copilot explain</code></td><td>Explain command-line output</td></tr>
+      <tr><td><code>copilot refactor</code></td><td>Refactor code from CLI</td></tr>
+      <tr><td><code>copilot test</code></td><td>Generate and run tests</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Comparison: Manual vs AI-Assisted</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Metric</th><th>Manual</th><th>AI-Assisted</th><th>Delta</th></tr></thead>
+    <tbody>
+      <tr><td>Time to implement</td><td>45 min</td><td>20 min</td><td style="color:var(--green);font-weight:700">-56%</td></tr>
+      <tr><td>Code quality score</td><td>7/10</td><td>8/10</td><td style="color:var(--green);font-weight:700">+14%</td></tr>
+      <tr><td>Test coverage</td><td>60%</td><td>85%</td><td style="color:var(--green);font-weight:700">+42%</td></tr>
+      <tr><td>Documentation</td><td>Minimal</td><td>Comprehensive</td><td style="color:var(--green);font-weight:700">+200%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 5: MODEL SELECTION ===================== -->
+<div class="tab-content" id="tab-models">
+  <h2 class="section-title">Model &amp; Task Selection Strategy</h2>
+  <p class="section-sub">Click any cell in the matrix to see the rationale and embedded-specific considerations.</p>
+
+  <div class="stat-callout" style="margin-bottom:24px">
+    <div class="stat-box" style="border-top:3px solid var(--green)"><div class="stat-num" style="color:var(--green)">Fast</div><div class="stat-label">Quick tasks · Speed-critical</div></div>
+    <div class="stat-box" style="border-top:3px solid var(--accent)"><div class="stat-num" style="color:var(--accent)">Balanced</div><div class="stat-label">Standard tasks · Good balance</div></div>
+    <div class="stat-box" style="border-top:3px solid var(--purple)"><div class="stat-num" style="color:var(--purple)">Premium</div><div class="stat-label">Complex tasks · Deep analysis</div></div>
+  </div>
+
+  <table class="matrix" id="modelMatrix">
+    <thead>
+      <tr><th>Task Type</th><th>Fast / Secure</th><th>Balanced</th><th>Premium</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Inline completion</strong></td>
+        <td class="fast" onclick="showModelTip(this,'Fast models are ideal for inline completion where latency matters most. Response appears as you type — speed is the primary concern.')">&#x2705; Recommended</td>
+        <td class="balanced" onclick="showModelTip(this,'Balanced models work but add slight latency. Better saved for more complex tasks.')">&#x26A0; Acceptable</td>
+        <td class="premium" onclick="showModelTip(this,'Premium models are overkill for inline completion. The added latency hurts developer flow.')">&#x274C; Overkill</td>
+      </tr>
+      <tr>
+        <td><strong>Code explanation</strong></td>
+        <td class="fast" onclick="showModelTip(this,'Fast models can explain simple functions but may miss nuance in complex embedded logic.')">&#x26A0; Limited</td>
+        <td class="balanced" onclick="showModelTip(this,'Balanced models provide good explanations of embedded patterns, state machines, and HAL boundaries.')">&#x2705; Recommended</td>
+        <td class="premium" onclick="showModelTip(this,'Premium models excel at explaining complex register-level operations and timing-critical code paths.')">&#x2705; Deep analysis</td>
+      </tr>
+      <tr>
+        <td><strong>Debugging</strong></td>
+        <td class="fast" onclick="showModelTip(this,'Fast models can help with simple syntax errors but struggle with multi-step debugging.')">&#x26A0; Limited</td>
+        <td class="balanced" onclick="showModelTip(this,'Balanced models handle most debugging scenarios including memory issues and logic errors.')">&#x2705; Recommended</td>
+        <td class="premium" onclick="showModelTip(this,'Premium models shine at complex debugging — race conditions, interrupt conflicts, memory corruption.')">&#x2705; Complex bugs</td>
+      </tr>
+      <tr>
+        <td><strong>Test generation</strong></td>
+        <td class="fast" onclick="showModelTip(this,'Fast models generate basic test stubs but may miss edge cases and boundary conditions.')">&#x26A0; Basic only</td>
+        <td class="balanced" onclick="showModelTip(this,'Balanced models generate good unit tests with proper assertions and boundary conditions.')">&#x2705; Recommended</td>
+        <td class="premium" onclick="showModelTip(this,'Premium models generate comprehensive test suites with mock generation and integration tests.')">&#x2705; Thorough</td>
+      </tr>
+      <tr>
+        <td><strong>Architecture analysis</strong></td>
+        <td class="fast" onclick="showModelTip(this,'Fast models lack the context window and reasoning depth for architecture analysis.')">&#x274C; Not suitable</td>
+        <td class="balanced" onclick="showModelTip(this,'Balanced models can analyze module structure but may miss cross-cutting concerns.')">&#x26A0; Limited</td>
+        <td class="premium" onclick="showModelTip(this,'Premium models provide deep architectural analysis including dependency mapping, pattern detection, and improvement suggestions.')">&#x2705; Recommended</td>
+      </tr>
+      <tr>
+        <td><strong>Critical code review</strong></td>
+        <td class="fast" onclick="showModelTip(this,'Never use fast models for safety-critical code review. They may miss subtle issues.')">&#x274C; Not suitable</td>
+        <td class="balanced" onclick="showModelTip(this,'Balanced models catch common issues but may not catch all safety-critical edge cases.')">&#x26A0; Caution</td>
+        <td class="premium" onclick="showModelTip(this,'Premium models provide thorough review of safety-critical code including MISRA compliance, timing analysis, and memory safety.')">&#x2705; Recommended</td>
+      </tr>
+    </tbody>
+  </table>
+  <div id="modelTip" class="tooltip-box"></div>
+</div>
+
+<!-- ===================== TAB 6: SAFE PRACTICES ===================== -->
+<div class="tab-content" id="tab-safety">
+  <h2 class="section-title">Safe Enterprise Usage Practices</h2>
+  <p class="section-sub">Embedded engineering demands extra caution. These rules protect your codebase, IP, and safety-critical systems.</p>
+
+  <div class="warning-banner">
+    <div class="warn-icon">&#x26A0;&#xFE0F;</div>
+    <div class="warn-text">
+      <h4>Embedded-Specific Safety Rules</h4>
+      <p>Never AI-generate timing-critical code · Always review interrupt handlers · Validate memory operations · Test boundary conditions · Document AI assistance</p>
+    </div>
+  </div>
+
+  <div class="safety-grid">
+    <div class="safety-card privacy">
+      <h3>&#x1F512; Data Privacy</h3>
+      <ul>
+        <li>Never include sensitive IP in prompts</li>
+        <li>Use code references, not full files</li>
+        <li>Respect content exclusions</li>
+        <li>Follow organization policies</li>
+      </ul>
+    </div>
+    <div class="safety-card quality">
+      <h3>&#x2728; Code Quality</h3>
+      <ul>
+        <li>Always review AI-generated code</li>
+        <li>Validate against coding standards</li>
+        <li>Test thoroughly before merging</li>
+        <li>Document AI assistance in code</li>
+      </ul>
+    </div>
+    <div class="safety-card compliance">
+      <h3>&#x1F4CB; Compliance</h3>
+      <ul>
+        <li>Track AI usage metrics</li>
+        <li>Maintain audit trails</li>
+        <li>Follow IP policies</li>
+        <li>Report issues promptly</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Embedded-Specific Safety Rules</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Rule</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Never AI-generate timing-critical code</strong></td><td>Must be verified by domain expert for deterministic behavior</td></tr>
+      <tr><td><strong>Always review interrupt handlers</strong></td><td>Safety-critical functionality with strict latency requirements</td></tr>
+      <tr><td><strong>Validate memory operations</strong></td><td>Prevent buffer overflows, use-after-free, and memory leaks</td></tr>
+      <tr><td><strong>Test boundary conditions</strong></td><td>Embedded constraints are strict — min/max values, overflow, edge cases</td></tr>
+      <tr><td><strong>Document AI assistance</strong></td><td>Traceability requirement for safety-critical certification</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Quick Reference: Copilot Commands</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Action</th><th>Shortcut</th></tr></thead>
+    <tbody>
+      <tr><td>Open Copilot Chat</td><td><code>Ctrl+Shift+I</code></td></tr>
+      <tr><td>Accept inline suggestion</td><td><code>Tab</code></td></tr>
+      <tr><td>Dismiss suggestion</td><td><code>Esc</code></td></tr>
+      <tr><td>Trigger suggestion</td><td><code>Ctrl+Space</code></td></tr>
+      <tr><td>Chat with selected code</td><td>Select code + <code>Ctrl+Shift+I</code></td></tr>
+      <tr><td>Explain code</td><td>Select code → "Explain this"</td></tr>
+      <tr><td>Fix code</td><td>Select code → "Fix this"</td></tr>
+      <tr><td>Generate tests</td><td>"Generate tests for this function"</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 7: SELF-CHECK QUIZ ===================== -->
+<div class="tab-content" id="tab-quiz">
+  <h2 class="section-title">Self-Check Quiz</h2>
+  <p class="section-sub">Test your understanding of Module 02 concepts. Click an answer to check immediately.</p>
+
+  <div class="quiz-container">
+    <div class="quiz-progress">
+      <div class="progress-bar"><div class="progress-fill" id="quizProgressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="quizProgressText">0 / 5 answered</div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="quiz-question" id="q1">
+      <span class="q-num">1</span>
+      <span class="q-text">Which GitHub Copilot tier offers knowledge bases, custom models, and repository-aware assistance?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">A</span> Copilot Individual</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">B</span> Copilot Business</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">C</span> Copilot Enterprise</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">D</span> Copilot Free</div>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-question" id="q2">
+      <span class="q-num">2</span>
+      <span class="q-text">What is the key advantage of Agent Mode over traditional Copilot?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">A</span> It generates code faster</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">B</span> It uses a more powerful LLM</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">C</span> Multi-file repository context with automatic file discovery</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">D</span> It works offline without internet</div>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-question" id="q3">
+      <span class="q-num">3</span>
+      <span class="q-text">Which model tier should you use for inline code completion in an embedded C/C++ project?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">A</span> Fast / Secure — speed is critical for inline suggestions</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">B</span> Balanced — needs good understanding of context</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">C</span> Premium — needs deep reasoning for accuracy</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">D</span> It doesn't matter — all models perform equally</div>
+      </div>
+      <div class="quiz-feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-question" id="q4">
+      <span class="q-num">4</span>
+      <span class="q-text">Which of these is an embedded-specific safety rule when using Copilot?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'b')"><span class="opt-letter">A</span> Always use the most expensive model</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'b')"><span class="opt-letter">B</span> Never AI-generate timing-critical code</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'b')"><span class="opt-letter">C</span> Disable Copilot for all production code</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'b')"><span class="opt-letter">D</span> Only use Copilot for test files</div>
+      </div>
+      <div class="quiz-feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-question" id="q5">
+      <span class="q-num">5</span>
+      <span class="q-text">What does Copilot Enterprise's repository-aware assistance index in an embedded C/C++ project?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'d')"><span class="opt-letter">A</span> Only Python and JavaScript files</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'d')"><span class="opt-letter">B</span> Only documentation and README files</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'d')"><span class="opt-letter">C</span> Only compiled binary files</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'d')"><span class="opt-letter">D</span> C/C++ source, headers, HAL boundaries, build system, and test frameworks</div>
+      </div>
+      <div class="quiz-feedback" id="q5-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== TAB SWITCHING ==========
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ========== TIER DIAGRAM ==========
+function toggleTierDetail(el) {
+  el.style.transform = el.style.transform === 'scale(1.02)' ? '' : 'scale(1.02)';
+}
+
+// ========== EXPANDABLE CARDS ==========
+function toggleCard(el) {
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.card.expanded').forEach(c => c.classList.remove('expanded'));
+  if (!wasExpanded) el.classList.add('expanded');
+}
+
+// ========== WORKFLOW DETAIL ==========
+const workflowDetails = {
+  ide: '<strong>IDE (VS Code / JetBrains)</strong><br>Where you write code. Copilot integrates as an extension — inline suggestions appear as you type, chat opens in a side panel, and agent mode runs tasks from the editor.',
+  copilot: '<strong>Copilot Services Layer</strong><br>Chat Engine: conversational Q&A about your code. Inline Assist: real-time code completion. Agent Mode: multi-file task execution with tool access. PR Review: automated code review on pull requests.',
+  repo: '<strong>Embedded Repository</strong><br>C/C++ source files, header files with interface contracts, Make/CMake build files, and test frameworks — all indexed and understood by Copilot Enterprise for context-aware assistance.'
+};
+function showWorkflowDetail(key) {
+  const box = document.getElementById('workflowDetail');
+  box.innerHTML = workflowDetails[key];
+  box.classList.add('show');
+  setTimeout(() => box.classList.remove('show'), 5000);
+}
+
+// ========== MODEL MATRIX ==========
+function showModelTip(el, text) {
+  document.querySelectorAll('.matrix td.selected').forEach(td => td.classList.remove('selected'));
+  el.classList.add('selected');
+  const box = document.getElementById('modelTip');
+  box.innerHTML = text;
+  box.classList.add('show');
+}
+
+// ========== QUIZ ==========
+const correctAnswers = { q1: 'C', q2: 'C', q3: 'A', q4: 'B', q5: 'D' };
+const explanations = {
+  q1: { correct: 'Correct! Copilot Enterprise adds knowledge bases (repo-aware indexing), custom models, GitHub.com integration, terminal/CLI workflows, and advanced PR/code-review assistance.', wrong: 'Not quite. Knowledge bases, custom models, and repository-aware assistance are exclusive to Copilot Enterprise — the highest tier.' },
+  q2: { correct: 'Correct! Agent Mode provides multi-file repository context, automatic file discovery, repository structure understanding, and multi-step task execution with tool integration.', wrong: 'Not quite. The key differentiator of Agent Mode is multi-file repository context with automatic file discovery — it understands your entire codebase, not just the open file.' },
+  q3: { correct: 'Correct! Inline completion requires speed — Fast/Secure models have the lowest latency, which is critical for real-time code suggestions as you type.', wrong: 'Not quite. For inline code completion, speed is the primary concern. Fast/Secure models provide the lowest latency, keeping your coding flow uninterrupted.' },
+  q4: { correct: 'Correct! Timing-critical code must be verified by a domain expert. AI-generated timing code can introduce subtle deterministic bugs that are hard to catch.', wrong: 'Not quite. Never AI-generate timing-critical code — it must be verified by a domain expert for deterministic behavior. This is an embedded-specific safety rule.' },
+  q5: { correct: 'Correct! Repository-aware assistance indexes C/C++ source and header files, identifies HAL boundaries, understands build system configuration (Make/CMake), and detects test frameworks.', wrong: 'Not quite. Repository-aware assistance indexes your entire C/C++ project: source files, headers, HAL boundaries, build system (Make/CMake), and test frameworks.' }
+};
+let answered = 0;
+
+function checkAnswer(qId, el, correctLetter) {
+  const q = document.getElementById(qId);
+  if (q.classList.contains('answered')) return;
+  q.classList.add('answered');
+  answered++;
+
+  const opts = q.querySelectorAll('.quiz-opt');
+  const selectedLetter = el.querySelector('.opt-letter').textContent;
+  const isCorrect = selectedLetter === correctAnswers[qId];
+
+  opts.forEach(opt => {
+    opt.classList.add('disabled');
+    const letter = opt.querySelector('.opt-letter').textContent;
+    if (letter === correctAnswers[qId]) opt.classList.add('correct');
+  });
+  if (!isCorrect) el.classList.add('wrong');
+
+  const fb = document.getElementById(qId + '-feedback');
+  fb.textContent = isCorrect ? explanations[qId].correct : explanations[qId].wrong;
+  fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('quizProgressFill').style.width = (answered / 5 * 100) + '%';
+  document.getElementById('quizProgressText').textContent = answered + ' / 5 answered';
+}
+</script>
+</body>
+</html>
