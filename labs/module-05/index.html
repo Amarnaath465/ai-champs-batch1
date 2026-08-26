@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 05 — Embedded Development: SDD to Complete Software SDLC</title>
+<style>
+  :root {
+    --navy: #1a2332;
+    --navy-light: #2a3a4e;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --green: #22c55e;
+    --green-bg: #f0fdf4;
+    --red: #ef4444;
+    --red-bg: #fef2f2;
+    --orange: #f59e0b;
+    --orange-bg: #fffbeb;
+    --purple: #8b5cf6;
+    --purple-bg: #f5f3ff;
+    --teal: #14b8a6;
+    --teal-bg: #f0fdfa;
+    --pink: #ec4899;
+    --pink-bg: #fdf2f8;
+    --cyan: #06b6d4;
+    --cyan-bg: #ecfeff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-50); color: var(--gray-800); line-height: 1.6; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: white; padding: 28px 32px; }
+  .header-badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 14px; color: rgba(255,255,255,0.75); }
+  .header-meta { display: flex; gap: 20px; margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6); }
+  .header-meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* Tab bar */
+  .tab-bar { display: flex; gap: 0; background: white; border-bottom: 1px solid var(--gray-200); padding: 0 16px; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+  .tab-bar button { padding: 14px 18px; border: none; background: none; font-size: 13px; font-weight: 500; color: var(--gray-500); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-bar button:hover { color: var(--gray-700); }
+  .tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-bar button.quiz-tab { color: var(--purple); }
+  .tab-bar button.quiz-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+  /* Tab content */
+  .tab-content { display: none; padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* Section heading */
+  .section-heading { font-size: 18px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+  .section-sub { font-size: 14px; color: var(--gray-500); margin-bottom: 20px; }
+
+  /* Card */
+  .card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .card-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+  .flow-step { background: white; border: 2px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; text-align: center; min-width: 120px; cursor: pointer; transition: all 0.2s; }
+  .flow-step:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .flow-step.active { background: var(--accent); color: white; }
+  .flow-step .step-num { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+  .flow-step .step-label { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .flow-arrow { font-size: 18px; color: var(--gray-400); padding: 0 6px; }
+
+  /* Comparison table */
+  .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--gray-200); margin: 16px 0; }
+  .compare-table th { background: var(--navy); color: white; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; }
+  .compare-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--gray-100); }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: var(--gray-50); }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .badge-green { background: var(--green-bg); color: #166534; }
+  .badge-orange { background: var(--orange-bg); color: #92400e; }
+  .badge-red { background: var(--red-bg); color: #991b1b; }
+  .badge-purple { background: var(--purple-bg); color: #5b21b6; }
+  .badge-teal { background: var(--teal-bg); color: #115e59; }
+  .badge-blue { background: #eff6ff; color: #1e40af; }
+  .badge-pink { background: var(--pink-bg); color: #9d174d; }
+
+  /* Pill list */
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 500; color: var(--gray-700); }
+
+  /* Expandable detail */
+  .expandable { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; }
+  .expand-header { padding: 12px 16px; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+  .expand-header:hover { background: var(--gray-50); }
+  .expand-arrow { transition: transform 0.3s; font-size: 12px; color: var(--gray-400); }
+  .expand-body { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; font-size: 13px; color: var(--gray-600); line-height: 1.7; }
+  .expandable.open .expand-body { max-height: 600px; padding: 12px 16px; }
+  .expandable.open .expand-arrow { transform: rotate(180deg); }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 28px; margin: 16px 0; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--gray-200); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot { position: absolute; left: -24px; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: var(--shadow); }
+  .timeline-item-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-item-desc { font-size: 13px; color: var(--gray-600); }
+
+  /* Quiz styles */
+  .quiz-question { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .quiz-question h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; gap: 8px; }
+  .quiz-question h3 .q-num { color: var(--purple); }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option { padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: flex-start; gap: 8px; }
+  .quiz-option:hover { border-color: var(--accent); background: #f8fafc; }
+  .quiz-option.correct { border-color: var(--green); background: var(--green-bg); color: #166534; }
+  .quiz-option.incorrect { border-color: var(--red); background: var(--red-bg); color: #991b1b; }
+  .quiz-option .opt-letter { font-weight: 700; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .quiz-option.correct .opt-letter { background: var(--green); color: white; }
+  .quiz-option.incorrect .opt-letter { background: var(--red); color: white; }
+  .quiz-explanation { margin-top: 12px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-600); display: none; line-height: 1.6; border-left: 3px solid var(--accent); }
+  .quiz-explanation.show { display: block; }
+
+  /* Highlight box */
+  .highlight-box { border-radius: var(--radius-sm); padding: 16px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+  .highlight-box.green { background: var(--green-bg); border-left: 4px solid var(--green); }
+  .highlight-box.orange { background: var(--orange-bg); border-left: 4px solid var(--orange); }
+  .highlight-box.red { background: var(--red-bg); border-left: 4px solid var(--red); }
+  .highlight-box.blue { background: #eff6ff; border-left: 4px solid var(--accent); }
+  .highlight-box.purple { background: var(--purple-bg); border-left: 4px solid var(--purple); }
+  .highlight-box.teal { background: var(--teal-bg); border-left: 4px solid var(--teal); }
+  .highlight-box strong { font-weight: 600; }
+
+  /* Artifact card */
+  .artifact-card { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 14px; background: white; }
+  .artifact-name { font-family: 'SF Mono', Monaco, monospace; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .artifact-desc { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+
+  /* Metric row */
+  .metric-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-value { font-size: 24px; font-weight: 700; color: var(--navy); min-width: 60px; }
+  .metric-label { font-size: 13px; color: var(--gray-600); }
+  .metric-bar { height: 6px; background: var(--gray-200); border-radius: 3px; flex: 1; }
+  .metric-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+
+  /* Checklist */
+  .checklist { list-style: none; }
+  .checklist li { padding: 8px 0; font-size: 13px; display: flex; align-items: flex-start; gap: 8px; border-bottom: 1px solid var(--gray-100); }
+  .checklist li:last-child { border-bottom: none; }
+  .check-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; margin-top: 2px; }
+  .check-icon.done { background: var(--green); color: white; }
+  .check-icon.pending { background: var(--gray-200); color: var(--gray-500); }
+
+  /* Tooltip */
+  .tooltip-trigger { position: relative; border-bottom: 1px dashed var(--gray-400); cursor: help; }
+  .tooltip-trigger:hover::after { content: attr(data-tip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--gray-800); color: white; padding: 6px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; z-index: 10; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">Module 05</div>
+  <h1>Embedded Development: SDD to Complete Software SDLC</h1>
+  <p>Greenfield builds from specification — brownfield enhancements without breaking what already works</p>
+  <div class="header-meta">
+    <span>&#128337; 3.5 hours</span>
+    <span>&#128187; Greenfield + Brownfield tracks</span>
+    <span>&#128295; Builds on Module 04 SDD</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="active" onclick="showTab(0)">Overview</button>
+  <button onclick="showTab(1)">Greenfield SDLC</button>
+  <button onclick="showTab(2)">Brownfield SDLC</button>
+  <button onclick="showTab(3)">Repo Archaeology</button>
+  <button onclick="showTab(4)">Safe Change</button>
+  <button onclick="showTab(5)">Regression</button>
+  <button class="quiz-tab" onclick="showTab(6)">Self-Check Quiz</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 0: Overview -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content active">
+  <div class="section-heading">Module 05 Overview</div>
+  <div class="section-sub">Two engineering flavors — one disciplined workflow</div>
+
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128736;</div>
+      <div class="card-title">What This Module Covers</div>
+    </div>
+    <div class="card-desc">
+      Module 05 applies the spec-driven development discipline learned in Module 04 to the two real-world engineering scenarios embedded teams face every day: building new features from scratch (greenfield) and safely enhancing existing code (brownfield). This is where specification-driven development moves from "practiced in isolation" to "actually shipped."
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 20px;">
+    <!-- Greenfield card -->
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#128161;</div>
+        <div>
+          <div class="card-title">Greenfield Track</div>
+          <span class="badge badge-green" style="margin-top: 4px;">Build from Spec</span>
+        </div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 12px;">
+        Build a complete feature — from specification through architecture, implementation, and testing. No legacy constraints, clean interfaces, full test coverage.
+      </div>
+      <div class="pill-list">
+        <span class="pill">SDD Workflow</span>
+        <span class="pill">Clean Interfaces</span>
+        <span class="pill">Full Test Coverage</span>
+        <span class="pill">Modern Patterns</span>
+      </div>
+    </div>
+
+    <!-- Brownfield card -->
+    <div class="card" style="border-left: 4px solid var(--orange);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128736;</div>
+        <div>
+          <div class="card-title">Brownfield Track</div>
+          <span class="badge badge-orange" style="margin-top: 4px;">Enhance Existing</span>
+        </div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 12px;">
+        Apply spec-first discipline to an existing firmware repository — safely, without breaking what already works. Requires understanding current architecture and respecting coding standards.
+      </div>
+      <div class="pill-list">
+        <span class="pill">Repo Archaeology</span>
+        <span class="pill">Safe Change</span>
+        <span class="pill">Backward Compat</span>
+        <span class="pill">Regression Protection</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why this matters for embedded -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128200;</div>
+      <div class="card-title">Why This Matters for Embedded Engineering</div>
+    </div>
+    <div class="card-desc">
+      68% of the cohort report roughly 50/50 brownfield vs greenfield work. Most embedded teams spend the majority of their time enhancing existing firmware — not building from scratch. Module 05 addresses both tracks, giving you the discipline to build new features <em>and</em> the safety net to modify what already ships.
+    </div>
+    <div class="grid-2" style="margin-top: 14px;">
+      <div class="metric-row">
+        <div class="metric-value" style="color: var(--green);">50%</div>
+        <div>
+          <div class="metric-label"><strong>Greenfield work</strong></div>
+          <div style="font-size: 12px; color: var(--gray-500);">New features from specification</div>
+        </div>
+        <div class="metric-bar"><div class="metric-fill" style="width: 50%; background: var(--green);"></div></div>
+      </div>
+      <div class="metric-row">
+        <div class="metric-value" style="color: var(--orange);">50%</div>
+        <div>
+          <div class="metric-label"><strong>Brownfield work</strong></div>
+          <div style="font-size: 12px; color: var(--gray-500);">Enhancing existing firmware</div>
+        </div>
+        <div class="metric-bar"><div class="metric-fill" style="width: 50%; background: var(--orange);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lab structure -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128218;</div>
+      <div class="card-title">Lab Structure (3.5 Hours)</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>#</th><th>Block</th><th>Duration</th><th>Focus</th></tr>
+      <tr><td>1</td><td>Greenfield: Spec → Architecture</td><td>45 min</td><td>Write spec, design architecture</td></tr>
+      <tr><td>2</td><td>Greenfield: Implement & Test</td><td>45 min</td><td>Code against spec, write tests</td></tr>
+      <tr><td>3</td><td>Brownfield: Repo Archaeology</td><td>30 min</td><td>Analyze existing codebase</td></tr>
+      <tr><td>4</td><td>Brownfield: Safe Enhancement</td><td>45 min</td><td>Plan and implement changes</td></tr>
+      <tr><td>5</td><td>Brownfield: Validate & Regression</td><td>30 min</td><td>Verify no breakage, traceability</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 1: Greenfield SDLC -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Greenfield SDLC Flow</div>
+  <div class="section-sub">Build new features from specification — complete lifecycle</div>
+
+  <!-- Flow diagram -->
+  <div class="flow">
+    <div class="flow-step active" onclick="showGreenfieldDetail(0)">
+      <div class="step-num">Step 1</div>
+      <div class="step-label">Specify</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" onclick="showGreenfieldDetail(1)">
+      <div class="step-num">Step 2</div>
+      <div class="step-label">Architect</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" onclick="showGreenfieldDetail(2)">
+      <div class="step-num">Step 3</div>
+      <div class="step-label">Plan</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" onclick="showGreenfieldDetail(3)">
+      <div class="step-num">Step 4</div>
+      <div class="step-label">Implement</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" onclick="showGreenfieldDetail(4)">
+      <div class="step-num">Step 5</div>
+      <div class="step-label">Test</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" onclick="showGreenfieldDetail(5)">
+      <div class="step-num">Step 6</div>
+      <div class="step-label">Validate</div>
+    </div>
+  </div>
+
+  <!-- Detail panels -->
+  <div id="gf-detail-0" class="card" style="margin-top: 16px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#128221;</div>
+      <div class="card-title">Step 1: Specify — Write the Specification</div>
+    </div>
+    <div class="card-desc">
+      The foundation of greenfield SDD. A well-written specification defines <em>what</em> the feature must do before anyone writes a line of code.
+    </div>
+    <div class="highlight-box green" style="margin-top: 12px;">
+      <strong>Five-point spec quality bar:</strong> precise signature, behaviour under edge cases, error-code ranges, empty/buffer-too-small cases, priority rules for simultaneous conditions.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">spec.md</div>
+        <div class="artifact-desc">Requirements, constraints, interfaces & contracts, acceptance criteria</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Acceptance Criteria</div>
+        <div class="artifact-desc">Traceable, testable conditions that define "done"</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gf-detail-1" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128736;</div>
+      <div class="card-title">Step 2: Architect — Design the Architecture</div>
+    </div>
+    <div class="card-desc">
+      Define module boundaries, data flow, API contracts, and integration points. In embedded: decide on HAL boundaries, memory allocation strategy, and real-time constraints.
+    </div>
+    <div class="highlight-box blue" style="margin-top: 12px;">
+      <strong>Architecture decisions are spec-driven:</strong> The specification's constraints (memory limits, timing, interface contracts) directly shape architectural choices. Don't design architecture in isolation.
+    </div>
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Module Boundaries</div>
+        <div class="artifact-desc">What each module owns, interface contracts between them</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Data Flow</div>
+        <div class="artifact-desc">How data moves through the system, storage, transformation</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Integration Points</div>
+        <div class="artifact-desc">External dependencies, HAL interfaces, hardware boundaries</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gf-detail-2" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128203;</div>
+      <div class="card-title">Step 3: Plan — Generate Implementation Plan</div>
+    </div>
+    <div class="card-desc">
+      Break the specification into an ordered, traceable task list. Each task maps to one or more acceptance criteria. Use AI (Copilot) to generate the plan, then review for correctness.
+    </div>
+    <div class="highlight-box purple" style="margin-top: 12px;">
+      <strong>Task traceability:</strong> Every task in <code>tasks.md</code> must reference a requirement or acceptance criterion from <code>spec.md</code>. No orphan tasks, no undocumented work.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">plan.md</div>
+        <div class="artifact-desc">Implementation strategy, dependency order, risk areas</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">tasks.md</div>
+        <div class="artifact-desc">Ordered task list with traceability to spec requirements</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gf-detail-3" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128187;</div>
+      <div class="card-title">Step 4: Implement — Code Against the Spec</div>
+    </div>
+    <div class="card-desc">
+      Task-by-task implementation with Copilot. Each diff is checked against its acceptance criterion as it lands. No "build first, spec later" — the spec drives every line.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>Key discipline:</strong> After each task, verify the implementation matches the spec's acceptance criteria. If the code does something the spec doesn't cover, either update the spec or remove the code.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Implementation Files</div>
+        <div class="artifact-desc">Source code (.c/.h), test files, build configuration</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Build Verification</div>
+        <div class="artifact-desc"><code>make test</code> green after each task</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gf-detail-4" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#9989;</div>
+      <div class="card-title">Step 5: Test — Verify Against the Spec</div>
+    </div>
+    <div class="card-desc">
+      Write tests that prove each acceptance criterion is met. Tests are not an afterthought — they're generated from the spec. If a criterion has no test, the criterion isn't done.
+    </div>
+    <div class="highlight-box teal" style="margin-top: 12px;">
+      <strong>Test = Proof:</strong> Every acceptance criterion maps to at least one test. A passing test suite is proof that the implementation matches the specification.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">test_*.c</div>
+        <div class="artifact-desc">Unit tests mapped to acceptance criteria</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Coverage Report</div>
+        <div class="artifact-desc">Proof that all criteria have corresponding tests</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gf-detail-5" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--pink-bg); color: var(--pink);">&#128200;</div>
+      <div class="card-title">Step 6: Validate — Prove Traceability</div>
+    </div>
+    <div class="card-desc">
+      Build a traceability matrix: every acceptance criterion &rarr; implemented code &rarr; test &rarr; passing. Audit against SDD anti-patterns. This is the "receipt" that proves the feature was built correctly.
+    </div>
+    <div class="highlight-box purple" style="margin-top: 12px;">
+      <strong>Traceability matrix:</strong> A living document that proves every acceptance criterion maps to implemented, tested, passing behavior. If any criterion has no mapping, the feature isn't done.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">traceability.md</div>
+        <div class="artifact-desc">Matrix: criterion &rarr; code &rarr; test &rarr; status</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Anti-Pattern Audit</div>
+        <div class="artifact-desc">Self-check against five common SDD failure modes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Greenfield example -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#128161;</div>
+      <div class="card-title">Example: Greenfield Feature Build</div>
+    </div>
+    <div class="card-desc">
+      In the lab, you build a complete feature — from spec to tests — following this exact flow. Each artifact feeds the next. The spec is the single source of truth.
+    </div>
+    <div class="highlight-box green" style="margin-top: 12px;">
+      <strong>Remember:</strong> Module 04 gave you the SDD workflow on a small feature. Module 05 scales it to a complete feature build — same discipline, larger scope, real deliverables.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 2: Brownfield SDLC -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Brownfield SDLC Flow</div>
+  <div class="section-sub">Enhance existing code safely — without breaking what already works</div>
+
+  <!-- Flow diagram -->
+  <div class="flow">
+    <div class="flow-step" style="border-color: var(--orange);" onclick="showBrownfieldDetail(0)">
+      <div class="step-num" style="color: var(--orange);">Step 1</div>
+      <div class="step-label">Archaeology</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--orange);" onclick="showBrownfieldDetail(1)">
+      <div class="step-num" style="color: var(--orange);">Step 2</div>
+      <div class="step-label">Analyze</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--orange);" onclick="showBrownfieldDetail(2)">
+      <div class="step-num" style="color: var(--orange);">Step 3</div>
+      <div class="step-label">Specify</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--orange);" onclick="showBrownfieldDetail(3)">
+      <div class="step-num" style="color: var(--orange);">Step 4</div>
+      <div class="step-label">Change Plan</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--orange);" onclick="showBrownfieldDetail(4)">
+      <div class="step-num" style="color: var(--orange);">Step 5</div>
+      <div class="step-label">Implement</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--orange);" onclick="showBrownfieldDetail(5)">
+      <div class="step-num" style="color: var(--orange);">Step 6</div>
+      <div class="step-label">Validate</div>
+    </div>
+  </div>
+
+  <!-- Detail panels -->
+  <div id="bf-detail-0" class="card" style="margin-top: 16px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128269;</div>
+      <div class="card-title">Step 1: Repo Archaeology — Understand What Exists</div>
+    </div>
+    <div class="card-desc">
+      Before touching any code, you must understand the existing architecture. Repository archaeology is the systematic process of discovering how the codebase is structured, what each module does, and where the boundaries are.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>Key insight:</strong> 42% of the cohort report fragmented change-impact analysis as their top pain point. Repository archaeology addresses this directly — structured discovery beats ad-hoc code reading.
+    </div>
+    <div class="pill-list" style="margin-top: 12px;">
+      <span class="pill">Dependency Analysis</span>
+      <span class="pill">Call Hierarchy</span>
+      <span class="pill">Build System</span>
+      <span class="pill">Module Boundaries</span>
+      <span class="pill">Configuration Files</span>
+    </div>
+  </div>
+
+  <div id="bf-detail-1" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128202;</div>
+      <div class="card-title">Step 2: Analyze — Impact Assessment</div>
+    </div>
+    <div class="card-desc">
+      Identify exactly what your change will touch. Map the blast radius: which functions, which modules, which tests. Understand the dependencies before writing a line of new code.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>Blast radius:</strong> For every change, ask: "What else calls this function? What depends on this module? What tests will break?" Answer these before coding.
+    </div>
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Direct Impact</div>
+        <div class="artifact-desc">Functions and modules directly modified</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Indirect Impact</div>
+        <div class="artifact-desc">Callers, dependents, downstream effects</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Test Impact</div>
+        <div class="artifact-desc">Existing tests that may need updating</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bf-detail-2" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128221;</div>
+      <div class="card-title">Step 3: Specify — Write a Change Specification</div>
+    </div>
+    <div class="card-desc">
+      Even for brownfield changes, write a spec. It's shorter than a greenfield spec but equally important: what's changing, what's staying the same, what must not break, and how you'll verify it.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>Brownfield spec extras:</strong> Add a "must not break" section — list the existing behaviors that must remain unchanged. Add a "regression risk" section — identify the highest-risk areas.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Change Spec</div>
+        <div class="artifact-desc">What's changing, what's not, what must not break</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Regression Risk</div>
+        <div class="artifact-desc">Highest-risk areas, fallback strategy</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bf-detail-3" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128203;</div>
+      <div class="card-title">Step 4: Change Plan — Minimal Diff Strategy</div>
+    </div>
+    <div class="card-desc">
+      Plan the smallest possible change that satisfies the spec. In brownfield, "less is more" — every extra line of code is a potential regression risk. Plan for minimal surface area.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>Minimal diff principle:</strong> The best brownfield change is the smallest one that works. If you can add 10 lines instead of 50, do it. If you can modify one function instead of three, do it.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Change Plan</div>
+        <div class="artifact-desc">Ordered steps, each mapping to a spec requirement</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Rollback Strategy</div>
+        <div class="artifact-desc">How to undo if something breaks</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bf-detail-4" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128187;</div>
+      <div class="card-title">Step 5: Implement — Safe, Incremental Changes</div>
+    </div>
+    <div class="card-desc">
+      Implement one change at a time. After each change, run existing tests to verify nothing broke. Only proceed when the test suite is green. Never make two changes at once.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>One change, one test run:</strong> The cardinal rule of brownfield development. Make a change. Run the tests. If green, proceed. If red, revert and diagnose. Never stack changes.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Incremental Diffs</div>
+        <div class="artifact-desc">Small, focused commits — one logical change each</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Test-After-Each</div>
+        <div class="artifact-desc">Run full test suite after every change</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bf-detail-5" class="card" style="margin-top: 16px; display: none;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#9989;</div>
+      <div class="card-title">Step 6: Validate — Prove Nothing Broke</div>
+    </div>
+    <div class="card-desc">
+      Final validation: run the full test suite, verify the change spec's acceptance criteria, and confirm backward compatibility. Document what changed and what was verified.
+    </div>
+    <div class="highlight-box orange" style="margin-top: 12px;">
+      <strong>Validation checklist:</strong> (1) All existing tests pass. (2) New tests pass. (3) Change spec criteria met. (4) No undocumented side effects. (5) Code review approved.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="artifact-card">
+        <div class="artifact-name">Validation Report</div>
+        <div class="artifact-desc">What was tested, what passed, what was verified</div>
+      </div>
+      <div class="artifact-card">
+        <div class="artifact-name">Change Log</div>
+        <div class="artifact-desc">Documented changes, decisions, and trade-offs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brownfield is harder -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+      <div class="card-title">Why Brownfield Is Harder Than Greenfield</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Dimension</th><th>Greenfield</th><th>Brownfield</th></tr>
+      <tr><td><strong>Starting point</strong></td><td>Blank slate — spec drives everything</td><td>Existing code — must understand before changing</td></tr>
+      <tr><td><strong>Constraints</strong></td><td>Self-imposed (from spec)</td><td>Inherited (existing architecture, coding standards)</td></tr>
+      <tr><td><strong>Risk</strong></td><td>Building the wrong thing</td><td>Breaking what already works</td></tr>
+      <tr><td><strong>Testing</strong></td><td>New tests for new code</td><td>Regression tests + new tests</td></tr>
+      <tr><td><strong>Key skill</strong></td><td>Specification writing</td><td>Code archaeology + minimal change</td></tr>
+      <tr><td><strong>AI assist</strong></td><td>Generate spec, plan, code</td><td>Analyze code, suggest safe changes, find dependencies</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 3: Repo Archaeology -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Repository Archaeology</div>
+  <div class="section-sub">Systematic discovery — understand the codebase before changing it</div>
+
+  <div class="highlight-box orange" style="margin-bottom: 20px;">
+    <strong>The #1 pain point from the cohort:</strong> 42% report fragmented change-impact analysis — reading code, tracing call hierarchies, dependency analysis, build/config analysis, all done ad-hoc with no set approach. Repository archaeology replaces ad-hoc with systematic.
+  </div>
+
+  <!-- Archaeology techniques -->
+  <div class="section-heading" style="font-size: 15px; margin-top: 20px;">Core Techniques</div>
+  <div class="section-sub">Click each technique to learn more</div>
+
+  <div class="expandable" onclick="toggleExpand(this)">
+    <div class="expand-header">
+      <span>&#128269; <strong>Dependency Mapping</strong></span>
+      <span class="expand-arrow">&#9660;</span>
+    </div>
+    <div class="expand-body">
+      Map what depends on what. In C/C++ firmware, this means: which .c files include which .h files, which functions call which other functions, which modules depend on which HAL interfaces. Start from the change point and trace outward. AI tools can accelerate this — ask Copilot to list all callers of a function, or trace include chains.
+    </div>
+  </div>
+
+  <div class="expandable" onclick="toggleExpand(this)">
+    <div class="expand-header">
+      <span>&#128279; <strong>Call Hierarchy Tracing</strong></span>
+      <span class="expand-arrow">&#9660;</span>
+    </div>
+    <div class="expand-body">
+      For the function you're modifying, trace the complete call chain: who calls this function, and who calls them? This reveals the full blast radius. In embedded systems, call hierarchies often cross module boundaries — a state machine callback might trigger a HAL call, which triggers an interrupt handler. Map the full chain.
+    </div>
+  </div>
+
+  <div class="expandable" onclick="toggleExpand(this)">
+    <div class="expand-header">
+      <span>&#128736; <strong>Build System Analysis</strong></span>
+      <span class="expand-arrow">&#9660;</span>
+    </div>
+    <div class="expand-body">
+      Understand the build system before making changes. Which Makefile/CMake rules compile which files? Are there conditional compilation flags? What libraries are linked? Build system changes can have unexpected side effects — know the structure before touching it.
+    </div>
+  </div>
+
+  <div class="expandable" onclick="toggleExpand(this)">
+    <div class="expand-header">
+      <span>&#128196; <strong>Configuration Archaeology</strong></span>
+      <span class="expand-arrow">&#9660;</span>
+    </div>
+    <div class="expand-body">
+      Embedded systems often have configuration files, header files with #define constants, or linker scripts that control behavior. Understanding these is critical — a change to a config value can affect memory layout, timing, or behavior across the entire system. Map all configuration touchpoints before changing anything.
+    </div>
+  </div>
+
+  <div class="expandable" onclick="toggleExpand(this)">
+    <div class="expand-header">
+      <span>&#128200; <strong>Test Inventory</strong></span>
+      <span class="expand-arrow">&#9660;</span>
+    </div>
+    <div class="expand-body">
+      What tests exist? What do they cover? Which tests are relevant to the area you're changing? In brownfield work, knowing your test coverage is as important as knowing your code coverage. If there are gaps, you need to fill them before making changes.
+    </div>
+  </div>
+
+  <!-- Archaeology workflow -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128736;</div>
+      <div class="card-title">Archaeology Workflow</div>
+    </div>
+    <div class="timeline" style="margin-top: 12px;">
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">1. Identify the change point</div>
+        <div class="timeline-item-desc">What function, module, or file needs to change?</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">2. Trace outward</div>
+        <div class="timeline-item-desc">Dependencies, callers, dependents, configuration</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">3. Map the blast radius</div>
+        <div class="timeline-item-desc">All files, functions, and tests that could be affected</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">4. Assess risk</div>
+        <div class="timeline-item-desc">Which areas are highest risk? What could break?</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">5. Document findings</div>
+        <div class="timeline-item-desc">Write down what you learned — it's the foundation of your change spec</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI-assisted archaeology -->
+  <div class="card" style="margin-top: 16px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#129302;</div>
+      <div class="card-title">AI-Assisted Archaeology</div>
+    </div>
+    <div class="card-desc">
+      Use Copilot to accelerate repository archaeology — but verify its findings. AI is excellent at pattern recognition (finding callers, tracing includes) but may miss domain-specific constraints (timing requirements, hardware dependencies).
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="highlight-box green">
+        <strong>AI is good at:</strong> Finding callers, tracing include chains, listing dependencies, identifying patterns across files, summarizing module purpose.
+      </div>
+      <div class="highlight-box red">
+        <strong>Verify manually:</strong> Timing constraints, hardware dependencies, interrupt safety, memory layout assumptions, undocumented side effects.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 4: Safe Change -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Safe Change Strategy</div>
+  <div class="section-sub">Minimal diff, maximum safety — the brownfield engineering discipline</div>
+
+  <!-- Core principles -->
+  <div class="section-heading" style="font-size: 15px;">Core Principles</div>
+  <div class="section-sub">Non-negotiable rules for brownfield changes</div>
+
+  <div class="grid-2" style="margin-bottom: 20px;">
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">Minimal Surface Area</div>
+      </div>
+      <div class="card-desc">Change the fewest files, functions, and lines possible. Every extra line is a potential regression. If you can solve the problem in 10 lines, don't write 50.</div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">One Change at a Time</div>
+      </div>
+      <div class="card-desc">Never stack changes. Make one change, run tests, verify green, then make the next. If something breaks, you know exactly which change caused it.</div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">Backward Compatibility</div>
+      </div>
+      <div class="card-desc">Existing APIs, interfaces, and behaviors must remain unchanged unless the spec explicitly says otherwise. New behavior is additive; existing behavior is sacred.</div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">Test-Driven Safety</div>
+      </div>
+      <div class="card-desc">Run the full test suite after every change. If a test fails, diagnose before proceeding. Never assume a failure is "expected" — verify it.</div>
+    </div>
+  </div>
+
+  <!-- Change strategy for embedded -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128295;</div>
+      <div class="card-title">Embedded-Specific Safety Considerations</div>
+    </div>
+    <div class="card-desc">
+      Embedded brownfield changes have unique risks that don't exist in application software.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Memory Layout</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Changes to struct sizes, array dimensions, or allocation patterns can shift memory layout. In embedded, this can affect timing, stack usage, and even hardware register mapping. Always verify memory usage after changes.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Timing Constraints</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          A function that was previously safe might become a timing hazard if its execution time increases. In real-time systems, worst-case execution time matters more than average. Profile before and after changes.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Interrupt Safety</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          If your change touches code that runs in interrupt context, you must verify: no blocking calls, no dynamic allocation, no non-atomic operations on shared data. Interrupt safety bugs are among the hardest to reproduce and debug.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>HAL Boundaries</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Hardware Abstraction Layer interfaces are contracts. Changing a HAL function's signature or behavior affects every caller. If you must change a HAL interface, update every caller and every mock.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change checklist -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#9745;</div>
+      <div class="card-title">Brownfield Change Checklist</div>
+    </div>
+    <ul class="checklist" style="margin-top: 12px;">
+      <li><span class="check-icon done">&#10003;</span> Repository archaeology complete — blast radius mapped</li>
+      <li><span class="check-icon done">&#10003;</span> Change specification written — what changes, what doesn't</li>
+      <li><span class="check-icon done">&#10003;</span> Minimal diff strategy — smallest possible change planned</li>
+      <li><span class="check-icon done">&#10003;</span> Existing tests identified — full suite ready to run</li>
+      <li><span class="check-icon done">&#10003;</span> Memory/timing impact assessed — no regressions expected</li>
+      <li><span class="check-icon done">&#10003;</span> Rollback strategy defined — how to undo if something breaks</li>
+      <li><span class="check-icon done">&#10003;</span> One change at a time — no stacked modifications</li>
+      <li><span class="check-icon done">&#10003;</span> Test after each change — green before proceeding</li>
+      <li><span class="check-icon done">&#10003;</span> Backward compatibility verified — existing behavior unchanged</li>
+      <li><span class="check-icon done">&#10003;</span> Code review requested — fresh eyes on the diff</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 5: Regression -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Regression Protection</div>
+  <div class="section-sub">Prove nothing broke — the safety net for brownfield changes</div>
+
+  <div class="highlight-box red" style="margin-bottom: 20px;">
+    <strong>The brownfield fear:</strong> "I changed one function and three modules broke." Regression protection is the systematic process of ensuring your change doesn't break existing behavior — and proving it with tests.
+  </div>
+
+  <!-- Regression strategy -->
+  <div class="section-heading" style="font-size: 15px;">Regression Strategy</div>
+  <div class="section-sub">Three layers of regression protection</div>
+
+  <div class="grid-3" style="margin-bottom: 20px;">
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">1</div>
+        <div class="card-title">Existing Tests</div>
+      </div>
+      <div class="card-desc">Run the full existing test suite before and after your change. If all tests pass before and after, existing behavior is preserved. This is your baseline safety net.</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--accent);">
+      <div class="card-header">
+        <div class="card-icon" style="background: #eff6ff; color: var(--accent);">2</div>
+        <div class="card-title">New Tests</div>
+      </div>
+      <div class="card-desc">Write tests for the new behavior. These prove your change does what the spec says. Without new tests, you're trusting the implementation without proof.</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">3</div>
+        <div class="card-title">Boundary Tests</div>
+      </div>
+      <div class="card-desc">Test the boundaries: edge cases, error paths, empty inputs, maximum sizes. These catch the regressions that normal tests miss — the ones at the edges of the spec.</div>
+    </div>
+  </div>
+
+  <!-- Regression workflow -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128260;</div>
+      <div class="card-title">Regression Test Workflow</div>
+    </div>
+    <div class="timeline" style="margin-top: 12px;">
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">Baseline: Run full test suite</div>
+        <div class="timeline-item-desc">Before any change, verify all existing tests pass. If tests are already failing, fix them first — don't stack new changes on broken tests.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">Make one change</div>
+        <div class="timeline-item-desc">Implement the smallest possible change per your change plan.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">Verify: Run full test suite again</div>
+        <div class="timeline-item-desc">All existing tests must still pass. If any fail, revert immediately and diagnose.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">Add new tests</div>
+        <div class="timeline-item-desc">Write tests for the new behavior. Run full suite including new tests.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">Final verification</div>
+        <div class="timeline-item-desc">Full suite green. New tests green. Change complete. Document what was verified.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Regression testing patterns for embedded -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128295;</div>
+      <div class="card-title">Embedded Regression Patterns</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Pattern</th><th>What It Catches</th><th>When to Use</th></tr>
+      <tr>
+        <td><strong>Build verification</strong></td>
+        <td>Compilation errors, linker errors, missing symbols</td>
+        <td>After every change — <code>make test</code> or equivalent</td>
+      </tr>
+      <tr>
+        <td><strong>Unit regression</strong></td>
+        <td>Function-level behavior changes</td>
+        <td>After changes to individual functions</td>
+      </tr>
+      <tr>
+        <td><strong>Integration regression</strong></td>
+        <td>Module interaction failures</td>
+        <td>After changes that cross module boundaries</td>
+      </tr>
+      <tr>
+        <td><strong>Memory regression</strong></td>
+        <td>Stack overflow, heap exhaustion, memory leaks</td>
+        <td>After changes to data structures, allocations, or recursion</td>
+      </tr>
+      <tr>
+        <td><strong>Timing regression</strong></td>
+        <td>Missed deadlines, increased latency</td>
+        <td>After changes to real-time paths or ISRs</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- When tests fail -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+      <div class="card-title">When Tests Fail: The Decision Tree</div>
+    </div>
+    <div class="card-desc">
+      A failing test after a brownfield change is <em>expected behavior</em> — it means your safety net is working. Follow this decision tree:
+    </div>
+    <div style="margin-top: 12px;">
+      <div class="highlight-box red">
+        <strong>1. Is this a pre-existing failure?</strong> &rarr; Run the test suite on the original code (before your change). If it fails there too, the issue is pre-existing — fix it separately.
+      </div>
+      <div class="highlight-box orange">
+        <strong>2. Did your change break it?</strong> &rarr; Revert your change. If the test passes again, your change caused the regression. Diagnose the root cause before re-implementing.
+      </div>
+      <div class="highlight-box blue">
+        <strong>3. Is the test wrong?</strong> &rarr; If the test was testing the wrong behavior, update the test — but only after confirming with the spec and team. Never silently delete a failing test.
+      </div>
+      <div class="highlight-box green">
+        <strong>4. Is this expected new behavior?</strong> &rarr; If your change intentionally alters behavior (per the spec), update the test to match the new spec. Document the change in the traceability matrix.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 6: Self-Check Quiz -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Self-Check Quiz</div>
+  <div class="section-sub">Verify your understanding of Module 05 key concepts</div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q1.</span> What is the primary risk in greenfield development?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">A</span>
+        <span>Breaking existing code that already works</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 1)">
+        <span class="opt-letter">B</span>
+        <span>Building the wrong thing — not matching the specification</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">C</span>
+        <span>Memory overflow in embedded systems</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">D</span>
+        <span>Failing to meet timing requirements</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-1">
+      <strong>Correct!</strong> In greenfield development, there's no existing code to break — the primary risk is building the wrong thing. The spec is your protection against this risk. Brownfield's primary risk is breaking what already works.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q2.</span> What percentage of the cohort report fragmented change-impact analysis as their top pain point?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">A</span>
+        <span>21%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">B</span>
+        <span>42%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">C</span>
+        <span>53%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 2)">
+        <span class="opt-letter">D</span>
+        <span>68%</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-2">
+      <strong>Correct!</strong> 68% of the cohort report fragmented change-impact analysis — reading code, tracing call hierarchies, dependency analysis, all done ad-hoc. This is the #1 pain point that repository archaeology addresses. (42% have little more than compile-check pipeline maturity.)
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q3.</span> In brownfield development, what should you do after making a single change?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">A</span>
+        <span>Make the next change immediately to maintain momentum</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 3)">
+        <span class="opt-letter">B</span>
+        <span>Run the full test suite and verify all tests pass</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">C</span>
+        <span>Commit the change and create a PR</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">D</span>
+        <span>Write the change specification</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-3">
+      <strong>Correct!</strong> The cardinal rule: make one change, run the full test suite, verify green, then proceed. Never stack changes. If tests fail, revert and diagnose before proceeding. Committing without testing is how regressions ship.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q4.</span> What is "repository archaeology" in the context of brownfield development?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">A</span>
+        <span>Deleting old code that's no longer used</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">B</span>
+        <span>Writing documentation for legacy code</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 4)">
+        <span class="opt-letter">C</span>
+        <span>Systematic discovery of codebase structure, dependencies, and boundaries before making changes</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">D</span>
+        <span>Migrating code from one repository to another</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-4">
+      <strong>Correct!</strong> Repository archaeology is the systematic process of understanding how a codebase is structured before changing it: dependency mapping, call hierarchy tracing, build system analysis, configuration archaeology, and test inventory. It replaces ad-hoc code reading with structured discovery.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q5.</span> What does the "minimal diff principle" mean for brownfield changes?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">A</span>
+        <span>Always write the minimum number of tests</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 5)">
+        <span class="opt-letter">B</span>
+        <span>The best change is the smallest one that satisfies the spec</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">C</span>
+        <span>Use the minimum number of tokens in your prompts</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">D</span>
+        <span>Change only one file at a time</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-5">
+      <strong>Correct!</strong> The minimal diff principle: the best brownfield change is the smallest one that works. If you can add 10 lines instead of 50, do it. If you can modify one function instead of three, do it. Every extra line of code is a potential regression risk.
+    </div>
+  </div>
+
+  <div class="highlight-box purple" style="margin-top: 20px;">
+    <strong>Module 05 Complete.</strong> You now understand both greenfield (build from spec) and brownfield (safe enhancement) SDLC workflows. In the lab, you'll apply both: build a complete feature from specification, then analyze and safely enhance an existing firmware repository. Next: <strong>Module 06 — Validate with Testing</strong> (test strategy, mocks/stubs, regression).
+  </div>
+</div>
+
+<script>
+function showTab(index) {
+  document.querySelectorAll('.tab-content').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+  document.querySelectorAll('.tab-bar button').forEach((b, i) => {
+    b.classList.toggle('active', i === index);
+  });
+}
+
+function showGreenfieldDetail(index) {
+  document.querySelectorAll('[id^="gf-detail-"]').forEach((el, i) => {
+    el.style.display = i === index ? 'block' : 'none';
+  });
+  document.querySelectorAll('.flow-step').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+}
+
+function showBrownfieldDetail(index) {
+  document.querySelectorAll('[id^="bf-detail-"]').forEach((el, i) => {
+    el.style.display = i === index ? 'block' : 'none';
+  });
+  document.querySelectorAll('.flow-step').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+}
+
+function toggleExpand(el) {
+  el.classList.toggle('open');
+}
+
+function checkQuiz(option, isCorrect, qNum) {
+  const question = option.closest('.quiz-question');
+  if (question.dataset.answered) return;
+  question.dataset.answered = 'true';
+
+  const options = question.querySelectorAll('.quiz-option');
+  options.forEach(o => {
+    o.style.pointerEvents = 'none';
+  });
+
+  if (isCorrect) {
+    option.classList.add('correct');
+  } else {
+    option.classList.add('incorrect');
+    options.forEach(o => {
+      if (o !== option) {
+        const onclick = o.getAttribute('onclick');
+        if (onclick && onclick.includes('true')) {
+          o.classList.add('correct');
+        }
+      }
+    });
+  }
+
+  const explanation = document.getElementById('explanation-' + qNum);
+  if (explanation) {
+    explanation.classList.add('show');
+  }
+}
+</script>
+
+</body>
+</html>

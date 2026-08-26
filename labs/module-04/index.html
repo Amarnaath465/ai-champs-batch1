@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 04 — Spec-Driven Development for Embedded Software</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d1b2a;--blue:#1b2a4a;--accent:#2196f3;--accent2:#00bcd4;
+  --green:#4caf50;--red:#f44336;--orange:#ff9800;--purple:#9c27b0;--teal:#009688;
+  --bg:#f5f7fa;--card:#fff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08);
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:32px 40px;text-align:center}
+.header h1{font-size:1.8rem;margin-bottom:6px;font-weight:700}
+.header p{opacity:.85;font-size:.95rem;max-width:720px;margin:0 auto}
+.header .badge{display:inline-block;background:var(--accent);color:#fff;font-size:.7rem;padding:3px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.tab-bar{display:flex;gap:0;background:var(--navy);overflow-x:auto;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.tab-btn{flex:0 0 auto;padding:14px 20px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent;font-family:inherit}
+.tab-btn:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.05)}
+.tab-btn.active{color:#fff;border-bottom-color:var(--accent);background:rgba(255,255,255,.08)}
+.tab-content{display:none;padding:32px 40px 60px;max-width:1100px;margin:0 auto;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-size:1.5rem;font-weight:700;margin-bottom:8px;color:var(--navy)}
+.section-sub{color:var(--muted);margin-bottom:24px;font-size:.95rem}
+.cmp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.88rem}
+.cmp-table th{background:var(--navy);color:#fff;padding:12px 16px;text-align:left;font-weight:600}
+.cmp-table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+.cmp-table tr:hover td{background:rgba(33,150,243,.04)}
+.flow{display:flex;align-items:center;justify-content:center;gap:0;margin:24px 0;flex-wrap:wrap}
+.flow-step{background:var(--card);border-radius:var(--radius);padding:18px 22px;text-align:center;box-shadow:var(--shadow);border:2px solid var(--border);min-width:160px;transition:.25s;cursor:pointer}
+.flow-step:hover{border-color:var(--accent);transform:translateY(-2px)}
+.flow-step .step-num{width:32px;height:32px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;margin:0 auto 10px}
+.flow-step h4{font-size:.92rem;margin-bottom:4px}
+.flow-step p{font-size:.78rem;color:var(--muted)}
+.flow-arrow{font-size:1.6rem;color:var(--accent);margin:0 8px;flex-shrink:0}
+.compare-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+.compare-panel{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border-top:4px solid}
+.compare-panel.old{border-top-color:var(--muted)}
+.compare-panel.new{border-top-color:var(--green)}
+.compare-panel h3{font-size:1rem;margin-bottom:12px}
+.compare-panel ul{margin:0 0 0 18px;font-size:.85rem}
+.compare-panel li{margin-bottom:6px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px}
+.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);transition:.25s;cursor:pointer;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px;color:#fff;font-weight:700}
+.card h3{font-size:1.05rem;margin-bottom:8px}
+.card p{color:var(--muted);font-size:.88rem}
+.card-detail{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s ease;opacity:0;margin-top:0}
+.card.expanded .card-detail{max-height:800px;opacity:1;margin-top:16px}
+.card-detail-inner{background:var(--bg);border-radius:8px;padding:16px;font-size:.85rem;line-height:1.7}
+.card-detail-inner ul{margin:8px 0 8px 18px}
+.card-detail-inner li{margin-bottom:4px}
+.card .expand-hint{position:absolute;top:14px;right:14px;font-size:.7rem;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:10px;transition:.2s}
+.card.expanded .expand-hint{display:none}
+.stat-callout{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);text-align:center;flex:1;min-width:140px}
+.stat-box .stat-num{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.stat-box .stat-label{font-size:.78rem;color:var(--muted);margin-top:4px}
+.tooltip-box{background:var(--navy);color:#fff;padding:14px 18px;border-radius:8px;font-size:.84rem;line-height:1.6;margin-top:16px;display:none;animation:fadeIn .2s}
+.tooltip-box.show{display:block}
+.warning-banner{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid var(--orange);border-radius:var(--radius);padding:18px 24px;margin:24px 0;display:flex;gap:14px;align-items:flex-start}
+.warning-banner .warn-icon{font-size:1.8rem;flex-shrink:0}
+.warning-banner .warn-text h4{color:#e65100;margin-bottom:4px}
+.warning-banner .warn-text p{font-size:.85rem;color:#bf360c}
+.contract-box{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin:20px 0;font-family:'Courier New',monospace;font-size:.82rem;line-height:1.8}
+.contract-box .section-label{color:var(--accent);font-weight:700;font-family:'Segoe UI',sans-serif;font-size:.9rem;margin:12px 0 6px;display:block}
+.checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:20px 0}
+.checklist-group{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid}
+.checklist-group h4{font-size:.95rem;margin-bottom:10px}
+.checklist-group label{display:flex;gap:8px;align-items:center;font-size:.85rem;margin-bottom:6px;cursor:pointer}
+.checklist-group label input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent)}
+.pattern-card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:20px}
+.pattern-card h3{font-size:1.05rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pattern-card .pattern-tag{font-size:.7rem;padding:3px 10px;border-radius:12px;font-weight:600}
+.pattern-steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pattern-step{background:var(--bg);border-radius:8px;padding:12px 16px;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+.pattern-step .step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;color:#fff}
+.trace-chain{display:flex;align-items:center;gap:0;margin:20px 0;flex-wrap:wrap;justify-content:center}
+.trace-node{background:var(--card);border-radius:var(--radius);padding:14px 18px;text-align:center;box-shadow:var(--shadow);border:2px solid var(--border);min-width:120px}
+.trace-node h5{font-size:.85rem;margin-bottom:2px}
+.trace-node p{font-size:.72rem;color:var(--muted)}
+.trace-arrow{font-size:1.2rem;color:var(--accent);margin:0 6px}
+.good-example{border-left:4px solid var(--green);background:#e8f5e9;padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0;font-size:.85rem}
+.bad-example{border-left:4px solid var(--red);background:#ffebee;padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0;font-size:.85rem}
+.quiz-container{max-width:720px;margin:0 auto}
+.quiz-question{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.quiz-question .q-num{display:inline-block;background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:.8rem;margin-right:8px}
+.quiz-question .q-text{font-weight:600;font-size:1rem;margin-bottom:16px;display:inline}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;font-size:.9rem;transition:.2s;display:flex;align-items:center;gap:10px}
+.quiz-opt:hover{border-color:var(--accent);background:rgba(33,150,243,.04)}
+.quiz-opt .opt-letter{width:28px;height:28px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;transition:.2s}
+.quiz-opt:hover .opt-letter{background:var(--accent);color:#fff}
+.quiz-opt.correct{border-color:var(--green);background:#e8f5e9}
+.quiz-opt.correct .opt-letter{background:var(--green);color:#fff}
+.quiz-opt.wrong{border-color:var(--red);background:#ffebee}
+.quiz-opt.wrong .opt-letter{background:var(--red);color:#fff}
+.quiz-opt.disabled{pointer-events:none;opacity:.85}
+.quiz-feedback{margin-top:12px;padding:12px 16px;border-radius:8px;font-size:.85rem;display:none;line-height:1.6}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct-fb{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+.quiz-feedback.wrong-fb{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c}
+.quiz-progress{background:var(--card);border-radius:var(--radius);padding:16px 24px;margin-bottom:28px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.quiz-progress .progress-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.quiz-progress .progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
+.quiz-progress .progress-text{font-size:.85rem;color:var(--muted);font-weight:600;white-space:nowrap}
+.layer-stack{display:flex;flex-direction:column;align-items:center;gap:0;margin:24px 0}
+.layer{width:90%;max-width:600px;border-radius:var(--radius);padding:16px 24px;text-align:center;cursor:pointer;transition:.3s;border:2px solid transparent}
+.layer:hover{transform:scale(1.03);z-index:2}
+.layer h4{font-size:.95rem;margin-bottom:4px}
+.layer p{font-size:.8rem;opacity:.85}
+.layer .layer-detail{display:none;margin-top:10px;text-align:left;background:rgba(255,255,255,.9);border-radius:8px;padding:12px;font-size:.82rem;color:var(--text)}
+.layer.active .layer-detail{display:block}
+.l1{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff}
+.l2{background:linear-gradient(135deg,#2e7d32,#1b5e20);color:#fff}
+.l3{background:linear-gradient(135deg,#ff8f00,#ff6f00);color:#fff}
+.l4{background:linear-gradient(135deg,#6a1b9a,#4a148c);color:#fff}
+@media(max-width:768px){
+  .tab-btn{padding:10px 14px;font-size:.75rem}
+  .tab-content{padding:20px 16px 40px}
+  .compare-panels{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg)}
+  .header h1{font-size:1.3rem}
+  .layer{width:100%!important}
+  .trace-chain{flex-direction:column}
+  .trace-arrow{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">AI Champions Programme</span>
+  <h1>Module 04 — Spec-Driven Development for Embedded Software</h1>
+  <p>From ad-hoc prompts to formal specifications. Learn to define requirements, interfaces, acceptance criteria, and traceability that make AI-generated code testable and compliant.</p>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="sdd">SDD Fundamentals</button>
+  <button class="tab-btn" data-tab="requirements">Requirements &amp; Constraints</button>
+  <button class="tab-btn" data-tab="interfaces">Interfaces &amp; Contracts</button>
+  <button class="tab-btn" data-tab="acceptance">Acceptance Criteria</button>
+  <button class="tab-btn" data-tab="workflow">SDD Workflow</button>
+  <button class="tab-btn" data-tab="trace">Traceability</button>
+  <button class="tab-btn" data-tab="quiz">Self-Check Quiz</button>
+</div>
+
+<!-- ===================== TAB 1: SDD FUNDAMENTALS ===================== -->
+<div class="tab-content active" id="tab-sdd">
+  <h2 class="section-title">SDD Fundamentals for Embedded Engineering</h2>
+  <p class="section-sub">Spec-Driven Development replaces ad-hoc interpretation with a structured flow: Spec → Plan → Tasks → Implementation.</p>
+
+  <div class="stat-callout">
+    <div class="stat-box"><div class="stat-num">79%</div><div class="stat-label">Already work spec-led</div></div>
+    <div class="stat-box"><div class="stat-num">42%</div><div class="stat-label">Use user stories/tickets</div></div>
+    <div class="stat-box"><div class="stat-num">30%</div><div class="stat-label">First-pass success (prompt-only)</div></div>
+    <div class="stat-box"><div class="stat-num">85%</div><div class="stat-label">First-pass success (SDD)</div></div>
+  </div>
+
+  <div class="compare-panels">
+    <div class="compare-panel old">
+      <h3>&#x274C; Traditional Approach</h3>
+      <p style="font-size:.88rem;margin-bottom:8px">Requirements → <strong>[Manual Interpretation]</strong> → Code → <strong>[Ad-hoc Test]</strong></p>
+      <ul>
+        <li>Inconsistent interpretation</li>
+        <li>Missing acceptance criteria</li>
+        <li>Poor traceability</li>
+        <li>Rework cycles (5-7 iterations)</li>
+        <li>No change control</li>
+      </ul>
+    </div>
+    <div class="compare-panel new">
+      <h3>&#x2705; SDD Approach</h3>
+      <p style="font-size:.88rem;margin-bottom:8px">Spec → Plan → Tasks → Implementation → <strong>Validation</strong></p>
+      <ul>
+        <li>Clear, testable requirements</li>
+        <li>Defined acceptance criteria</li>
+        <li>Full traceability (req → code → test)</li>
+        <li>Reduced rework (1-2 iterations)</li>
+        <li>Spec-controlled change management</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">SDD vs Traditional Development</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Aspect</th><th>Traditional</th><th>SDD</th><th>Embedded Impact</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Requirements</strong></td><td>Verbal/tickets</td><td>Formal specification</td><td>Clear constraints</td></tr>
+      <tr><td><strong>Planning</strong></td><td>Ad-hoc</td><td>Spec-driven plan</td><td>Resource allocation</td></tr>
+      <tr><td><strong>Implementation</strong></td><td>Code-first</td><td>Spec-first</td><td>Architecture alignment</td></tr>
+      <tr><td><strong>Testing</strong></td><td>After implementation</td><td>Derived from spec</td><td>Validation coverage</td></tr>
+      <tr><td><strong>Traceability</strong></td><td>Manual</td><td>Automated</td><td>Compliance audit</td></tr>
+      <tr><td><strong>Change Control</strong></td><td>Informal</td><td>Spec-controlled</td><td>Risk management</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Embedded SDD Considerations</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#2196f3,#1976d2)">&#x2699;</div>
+      <h3>Functional Requirements</h3>
+      <p>Feature behavior, I/O specs, state machines, protocol compliance</p>
+      <div class="card-detail"><div class="card-detail-inner">
+        <ul><li>Feature behavior description</li><li>Input/output specifications</li><li>State machine definitions</li><li>Protocol compliance requirements</li></ul>
+      </div></div>
+    </div>
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#ff9800,#f57c00)">&#x23F1;</div>
+      <h3>Non-Functional Requirements</h3>
+      <p>Timing, memory, power, reliability constraints</p>
+      <div class="card-detail"><div class="card-detail-inner">
+        <ul><li>Timing constraints (deadlines, latency)</li><li>Memory constraints (RAM, Flash)</li><li>Power consumption limits</li><li>Reliability requirements (MTBF)</li></ul>
+      </div></div>
+    </div>
+    <div class="card" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <div class="icon" style="background:linear-gradient(135deg,#4caf50,#388e3c)">&#x1F517;</div>
+      <h3>Interface Requirements</h3>
+      <p>HAL boundaries, protocols, data structures, error contracts</p>
+      <div class="card-detail"><div class="card-detail-inner">
+        <ul><li>HAL boundary contracts</li><li>Communication protocols</li><li>Data formats and structures</li><li>Error handling contracts</li></ul>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 2: REQUIREMENTS & CONSTRAINTS ===================== -->
+<div class="tab-content" id="tab-requirements">
+  <h2 class="section-title">Requirements and Constraints</h2>
+  <p class="section-sub">Embedded systems demand precise, quantitative constraints. Click each category to see details.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Functional Requirements Structure</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Component</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Purpose</strong></td><td>What the feature does</td><td>"Implement UART receive driver"</td></tr>
+      <tr><td><strong>Scope</strong></td><td>Boundaries of implementation</td><td>"RX only, no flow control"</td></tr>
+      <tr><td><strong>Behavior</strong></td><td>Detailed functionality</td><td>"Support 9600-115200 baud rates"</td></tr>
+      <tr><td><strong>Inputs</strong></td><td>External inputs</td><td>"UART RX pin, configuration parameters"</td></tr>
+      <tr><td><strong>Outputs</strong></td><td>Generated outputs</td><td>"Received data buffer, status flags"</td></tr>
+      <tr><td><strong>State Changes</strong></td><td>State transitions</td><td>"IDLE → RECEIVING → COMPLETE"</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 16px;font-size:1.05rem">Embedded Constraints Matrix</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="card" style="cursor:default;border-top:4px solid #e53935" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <h3 style="color:#e53935">&#x23F1; Timing Constraints</h3>
+      <p>Deadlines, latency, periodicity</p>
+      <div class="card-detail"><div class="card-detail-inner">
+        <table class="cmp-table" style="margin:0">
+          <thead><tr><th>Constraint</th><th>Value</th><th>Justification</th></tr></thead>
+          <tbody>
+            <tr><td>ISR latency</td><td><strong>&lt; 1μs</strong></td><td>Real-time requirement</td></tr>
+            <tr><td>Task period</td><td><strong>10ms</strong></td><td>Control loop timing</td></tr>
+            <tr><td>Response time</td><td><strong>&lt; 10ms</strong></td><td>User experience</td></tr>
+            <tr><td>Watchdog</td><td><strong>500ms</strong></td><td>System recovery</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+    <div class="card" style="cursor:default;border-top:4px solid #1565c0" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <h3 style="color:#1565c0">&#x1F4BE; Memory Constraints</h3>
+      <p>RAM, Flash, stack, allocation</p>
+      <div class="card-detail"><div class="card-detail-inner">
+        <table class="cmp-table" style="margin:0">
+          <thead><tr><th>Constraint</th><th>Value</th><th>Justification</th></tr></thead>
+          <tbody>
+            <tr><td>RAM usage</td><td><strong>&lt; 2KB per module</strong></td><td>Resource limit</td></tr>
+            <tr><td>Flash usage</td><td><strong>&lt; 16KB per feature</strong></td><td>Storage limit</td></tr>
+            <tr><td>Dynamic allocation</td><td><strong>None</strong></td><td>Predictability</td></tr>
+            <tr><td>Stack size</td><td><strong>&lt; 512 bytes</strong></td><td>RTCS constraint</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+    <div class="card" style="cursor:default;border-top:4px solid #6a1b9a" onclick="toggleCard(this)">
+      <span class="expand-hint">Click to expand</span>
+      <h3 style="color:#6a1b9a">&#x1F527; Reliability Constraints</h3>
+      <p>MTBF, error recovery, fault tolerance</p>
+      <div class="card-detail"><div class="card-detail-inner">
+        <table class="cmp-table" style="margin:0">
+          <thead><tr><th>Constraint</th><th>Value</th><th>Justification</th></tr></thead>
+          <tbody>
+            <tr><td>MTBF</td><td><strong>&gt; 10,000 hours</strong></td><td>Availability requirement</td></tr>
+            <tr><td>Error recovery</td><td><strong>Graceful degradation</strong></td><td>Safety requirement</td></tr>
+            <tr><td>Watchdog</td><td><strong>Compliance</strong></td><td>System recovery</td></tr>
+            <tr><td>Fault tolerance</td><td><strong>Required</strong></td><td>Safety-critical</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 3: INTERFACES & CONTRACTS ===================== -->
+<div class="tab-content" id="tab-interfaces">
+  <h2 class="section-title">Interfaces and Contracts</h2>
+  <p class="section-sub">Interface contracts define exactly what a module provides and what it requires. Click elements to explore.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Interface Contract Template</h3>
+  <div class="contract-box">
+    <span class="section-label">MODULE:</span> [Module Name]
+    <span class="section-label">RESPONSIBILITY:</span> [What this module does]
+
+    <span class="section-label">PUBLIC INTERFACE:</span>
+    <span style="color:var(--muted)">Functions:</span>
+      • [function_name](params) → return_type
+        Pre-conditions: [what must be true before]
+        Post-conditions: [what will be true after]
+        Error codes: [possible error returns]
+
+    <span style="color:var(--muted)">Data Structures:</span>
+      • [struct_name] { fields, types, ranges }
+
+    <span style="color:var(--muted)">Constants:</span>
+      • [CONSTANT_NAME] = value  // description
+
+    <span class="section-label">DEPENDENCIES:</span>
+    <span style="color:var(--muted)">Required interfaces:</span> [list of dependencies]
+    <span style="color:var(--muted)">HAL requirements:</span> [hardware dependencies]
+    <span style="color:var(--muted)">Build requirements:</span> [toolchain, libraries]
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">HAL Boundary Contracts</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Interface</th><th>Function</th><th>Parameters</th><th>Return</th><th>Error Codes</th></tr></thead>
+    <tbody>
+      <tr><td><code>hal_gpio</code></td><td><code>hal_gpio_read_pin(port, pin)</code></td><td>GPIO_Port, GPIO_Pin</td><td>GPIO_State</td><td>HAL_OK, HAL_ERROR</td></tr>
+      <tr><td><code>hal_gpio</code></td><td><code>hal_gpio_write_pin(port, pin, state)</code></td><td>GPIO_Port, GPIO_Pin, GPIO_State</td><td>HAL_Status</td><td>HAL_OK, HAL_ERROR</td></tr>
+      <tr><td><code>hal_uart</code></td><td><code>hal_uart_send(data, length)</code></td><td>uint8_t*, size_t</td><td>HAL_Status</td><td>HAL_OK, HAL_BUSY</td></tr>
+      <tr><td><code>hal_uart</code></td><td><code>hal_uart_receive(buffer, length)</code></td><td>uint8_t*, size_t</td><td>HAL_Status</td><td>HAL_OK, HAL_TIMEOUT</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">State Machine Contract</h3>
+  <div style="display:flex;flex-direction:column;gap:0;align-items:center;margin:20px 0">
+    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#1565c0;margin-bottom:4px">IDLE</h4>
+      <p style="font-size:.8rem;color:#1565c0">No activity, waiting for trigger</p>
+    </div>
+    <div style="font-size:1.2rem;color:var(--muted);margin:2px 0">↓ on start_command</div>
+    <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#e65100;margin-bottom:4px">INITIALIZING</h4>
+      <p style="font-size:.8rem;color:#e65100">Setting up resources</p>
+    </div>
+    <div style="font-size:1.2rem;color:var(--muted);margin:2px 0">↓ on init_complete</div>
+    <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#2e7d32;margin-bottom:4px">RUNNING</h4>
+      <p style="font-size:.8rem;color:#2e7d32">Active operation</p>
+    </div>
+    <div style="font-size:1.2rem;color:var(--muted);margin:2px 0">↓ on fault_detected</div>
+    <div style="background:linear-gradient(135deg,#ffebee,#ffcdd2);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#c62828;margin-bottom:4px">ERROR</h4>
+      <p style="font-size:.8rem;color:#c62828">Fault condition detected</p>
+    </div>
+    <div style="font-size:1.2rem;color:var(--muted);margin:2px 0">↓ on reset_command → IDLE</div>
+  </div>
+</div>
+
+<!-- ===================== TAB 4: ACCEPTANCE CRITERIA ===================== -->
+<div class="tab-content" id="tab-acceptance">
+  <h2 class="section-title">Acceptance Criteria and Specification Quality</h2>
+  <p class="section-sub">Good acceptance criteria are quantitative, testable, and unambiguous. Click checkboxes to track quality.</p>
+
+  <div class="checklist">
+    <div class="checklist-group" style="border-left-color:#1565c0">
+      <h4 style="color:#1565c0">&#x2705; Completeness</h4>
+      <label><input type="checkbox"> All functional requirements documented</label>
+      <label><input type="checkbox"> All non-functional constraints specified</label>
+      <label><input type="checkbox"> Interface contracts defined</label>
+      <label><input type="checkbox"> Error handling specified</label>
+      <label><input type="checkbox"> State machine fully defined</label>
+    </div>
+    <div class="checklist-group" style="border-left-color:#2e7d32">
+      <h4 style="color:#2e7d32">&#x1F441; Clarity</h4>
+      <label><input type="checkbox"> No ambiguous language</label>
+      <label><input type="checkbox"> Quantitative criteria (not "fast", use "&lt; 10ms")</label>
+      <label><input type="checkbox"> Testable acceptance criteria</label>
+      <label><input type="checkbox"> Clear scope boundaries</label>
+    </div>
+    <div class="checklist-group" style="border-left-color:#ff8f00">
+      <h4 style="color:#ff8f00">&#x1F504; Consistency</h4>
+      <label><input type="checkbox"> No contradicting requirements</label>
+      <label><input type="checkbox"> Aligned with architecture</label>
+      <label><input type="checkbox"> Compatible with existing interfaces</label>
+      <label><input type="checkbox"> Follows naming conventions</label>
+    </div>
+    <div class="checklist-group" style="border-left-color:#6a1b9a">
+      <h4 style="color:#6a1b9a">&#x1F517; Traceability</h4>
+      <label><input type="checkbox"> Unique requirement IDs</label>
+      <label><input type="checkbox"> Links to design decisions</label>
+      <label><input type="checkbox"> Links to test cases</label>
+      <label><input type="checkbox"> Change history documented</label>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Good vs Bad Acceptance Criteria</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Criterion</th><th>&#x274C; Bad Example</th><th>&#x2705; Good Example</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Performance</strong></td><td class="bad-example">"Should be fast"</td><td class="good-example">"Response time &lt; 10ms under max load"</td></tr>
+      <tr><td><strong>Memory</strong></td><td class="bad-example">"Use little memory"</td><td class="good-example">"RAM usage &lt; 2KB, Flash &lt; 16KB"</td></tr>
+      <tr><td><strong>Reliability</strong></td><td class="bad-example">"Handle errors"</td><td class="good-example">"On UART timeout, return HAL_TIMEOUT within 100ms"</td></tr>
+      <tr><td><strong>Testing</strong></td><td class="bad-example">"Test it well"</td><td class="good-example">"All boundary conditions covered, &gt; 80% branch coverage"</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Acceptance Criteria Categories</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Criterion</th><th>Description</th><th>Verification Method</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Functional</strong></td><td>Feature works as specified</td><td>Unit test, integration test</td></tr>
+      <tr><td><strong>Performance</strong></td><td>Meets timing constraints</td><td>Timing measurement</td></tr>
+      <tr><td><strong>Memory</strong></td><td>Stays within resource limits</td><td>Memory analysis</td></tr>
+      <tr><td><strong>Reliability</strong></td><td>Handles errors gracefully</td><td>Fault injection</td></tr>
+      <tr><td><strong>Compliance</strong></td><td>Follows coding standards</td><td>Static analysis</td></tr>
+      <tr><td><strong>Traceability</strong></td><td>Links to requirements</td><td>Spec-to-code mapping</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 5: SDD WORKFLOW ===================== -->
+<div class="tab-content" id="tab-workflow">
+  <h2 class="section-title">The SDD Workflow</h2>
+  <p class="section-sub">Four phases from specification to validated implementation. Click each phase for details.</p>
+
+  <div class="flow">
+    <div class="flow-step" onclick="showWorkflowDetail('spec')">
+      <div class="step-num">1</div>
+      <h4>Specification</h4>
+      <p>Define requirements, constraints, interfaces</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="showWorkflowDetail('plan')">
+      <div class="step-num">2</div>
+      <h4>Plan</h4>
+      <p>Break into modules, identify dependencies</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="showWorkflowDetail('tasks')">
+      <div class="step-num">3</div>
+      <h4>Tasks</h4>
+      <p>Create tasks with acceptance criteria</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="showWorkflowDetail('impl')">
+      <div class="step-num">4</div>
+      <h4>Implementation</h4>
+      <p>Code, test, validate, trace</p>
+    </div>
+  </div>
+  <div id="workflowDetail" class="tooltip-box"></div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Specification → Implementation Mapping</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Spec Element</th><th>Implementation</th><th>Validation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Requirement ID</strong></td><td>Function/module</td><td>Test case ID</td></tr>
+      <tr><td><strong>Acceptance criterion</strong></td><td>Test assertion</td><td>Test result</td></tr>
+      <tr><td><strong>Interface contract</strong></td><td>API implementation</td><td>Integration test</td></tr>
+      <tr><td><strong>Timing constraint</strong></td><td>Code optimization</td><td>Timing measurement</td></tr>
+      <tr><td><strong>Memory constraint</strong></td><td>Resource allocation</td><td>Memory analysis</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Task Breakdown Example: UART Receive Driver</h3>
+  <div class="pattern-steps">
+    <div class="pattern-step">
+      <div class="step-icon" style="background:#1565c0">1</div>
+      <div><strong>Define Interface Contract</strong> — Create uart_receive.h, define signatures, document error codes<br><em style="font-size:.8rem;color:var(--muted)">Acceptance: Header compiles, API documented</em></div>
+    </div>
+    <div class="pattern-step">
+      <div class="step-icon" style="background:#2e7d32">2</div>
+      <div><strong>Implement Configuration</strong> — Create config structure, define baud rate, buffer size<br><em style="font-size:.8rem;color:var(--muted)">Acceptance: Config structure matches spec</em></div>
+    </div>
+    <div class="pattern-step">
+      <div class="step-icon" style="background:#ff8f00">3</div>
+      <div><strong>Implement Core Logic</strong> — Ring buffer, receive state machine<br><em style="font-size:.8rem;color:var(--muted)">Acceptance: Logic matches state diagram</em></div>
+    </div>
+    <div class="pattern-step">
+      <div class="step-icon" style="background:#c62828">4</div>
+      <div><strong>Write Unit Tests</strong> — Normal operation, boundary conditions, error handling<br><em style="font-size:.8rem;color:var(--muted)">Acceptance: All tests pass, coverage &gt; 80%</em></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 6: TRACEABILITY ===================== -->
+<div class="tab-content" id="tab-trace">
+  <h2 class="section-title">Traceability and Change Control</h2>
+  <p class="section-sub">Traceability links requirements to code and tests. Change control manages modifications safely.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Traceability Flow</h3>
+  <div class="trace-chain">
+    <div class="trace-node" style="border-color:#1565c0">
+      <h5 style="color:#1565c0">Requirement</h5>
+      <p>REQ-001-001</p>
+    </div>
+    <span class="trace-arrow">→</span>
+    <div class="trace-node" style="border-color:#2e7d32">
+      <h5 style="color:#2e7d32">Design</h5>
+      <p>design-001</p>
+    </div>
+    <span class="trace-arrow">→</span>
+    <div class="trace-node" style="border-color:#ff8f00">
+      <h5 style="color:#ff8f00">Code</h5>
+      <p>uart_recv.c</p>
+    </div>
+    <span class="trace-arrow">→</span>
+    <div class="trace-node" style="border-color:#c62828">
+      <h5 style="color:#c62828">Test</h5>
+      <p>TC-001</p>
+    </div>
+  </div>
+  <p style="font-size:.85rem;color:var(--muted);text-align:center;margin:8px 0 24px">&#x21C4; Bidirectional: Forward (requirement → test = coverage) · Backward (code → requirement = impact analysis)</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Traceability Benefits</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <div class="card" style="cursor:default;border-top:3px solid var(--accent)">
+      <h3>&#x1F50D; Impact Analysis</h3>
+      <p>Which code is affected by a requirement change?</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--green)">
+      <h3>&#x1F4CB; Coverage Analysis</h3>
+      <p>Which requirements have tests?</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--orange)">
+      <h3>&#x1F504; Regression Analysis</h3>
+      <p>Which tests to run for a code change?</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--purple)">
+      <h3>&#x1F4DD; Compliance Audit</h3>
+      <p>Prove requirements are implemented and tested</p>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Change Control Process</h3>
+  <div class="pattern-steps">
+    <div class="pattern-step"><div class="step-icon" style="background:#1565c0">1</div><div><strong>Submit change request</strong> — Document the requested change</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#2e7d32">2</div><div><strong>Impact analysis</strong> — Identify affected requirements, code, tests</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#ff8f00">3</div><div><strong>Review and approve</strong> — Approve or reject the change</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#6a1b9a">4</div><div><strong>Update specification</strong> — Revise spec with version control</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#c62828">5</div><div><strong>Update implementation</strong> — Apply code changes</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#009688">6</div><div><strong>Update tests</strong> — Revise test cases</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#795548">7</div><div><strong>Verify traceability</strong> — Ensure matrix is updated</div></div>
+    <div class="pattern-step"><div class="step-icon" style="background:#455a64">8</div><div><strong>Close change request</strong> — Change complete</div></div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Change Impact Analysis Example</h3>
+  <div class="pattern-card">
+    <h3><span class="pattern-tag" style="background:#e3f2fd;color:#1565c0">&#x1F504; Change Request</span> "Modify UART receive to support DMA mode"</h3>
+    <div class="pattern-steps">
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#1565c0">&#x1F4DD;</div>
+        <div><strong>Affected Requirements:</strong> REQ-001-001 (receive function), REQ-001-003 (timing constraints)</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#2e7d32">&#x1F4C4;</div>
+        <div><strong>Affected Code:</strong> uart_receive.c, dma_config.c</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#ff8f00">&#x1F9EA;</div>
+        <div><strong>Affected Tests:</strong> TC-001 (normal receive), TC-003 (timing test)</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#c62828">&#x26A0;</div>
+        <div><strong>Risk:</strong> High — timing changes may affect real-time behavior</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Measurable Differences: Prompt-Only vs SDD</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Metric</th><th>Prompt-Only</th><th>Spec-Driven</th><th>Improvement</th></tr></thead>
+    <tbody>
+      <tr><td>Requirements clarity</td><td>4/10</td><td>9/10</td><td style="color:var(--green);font-weight:700">+125%</td></tr>
+      <tr><td>First-pass success</td><td>30%</td><td>85%</td><td style="color:var(--green);font-weight:700">+183%</td></tr>
+      <tr><td>Rework cycles</td><td>5-7</td><td>1-2</td><td style="color:var(--green);font-weight:700">-71%</td></tr>
+      <tr><td>Test coverage</td><td>40%</td><td>90%</td><td style="color:var(--green);font-weight:700">+125%</td></tr>
+      <tr><td>Traceability</td><td>0%</td><td>100%</td><td style="color:var(--green);font-weight:700">&#x221E;</td></tr>
+      <tr><td>Change impact analysis</td><td>Manual</td><td>Automated</td><td style="color:var(--green);font-weight:700">-80% effort</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 7: SELF-CHECK QUIZ ===================== -->
+<div class="tab-content" id="tab-quiz">
+  <h2 class="section-title">Self-Check Quiz</h2>
+  <p class="section-sub">Test your understanding of Module 04 concepts. Click an answer to check immediately.</p>
+
+  <div class="quiz-container">
+    <div class="quiz-progress">
+      <div class="progress-bar"><div class="progress-fill" id="quizProgressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="quizProgressText">0 / 5 answered</div>
+    </div>
+
+    <div class="quiz-question" id="q1">
+      <span class="q-num">1</span>
+      <span class="q-text">What is the correct order of the SDD workflow?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">A</span> Code → Test → Spec → Deploy</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">B</span> Spec → Plan → Tasks → Implementation</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">C</span> Plan → Spec → Implementation → Test</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'b')"><span class="opt-letter">D</span> Tasks → Spec → Plan → Code</div>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+
+    <div class="quiz-question" id="q2">
+      <span class="q-num">2</span>
+      <span class="q-text">Which of these is a GOOD acceptance criterion for timing?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">A</span> "Should be fast"</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">B</span> "Response time is acceptable"</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">C</span> "Response time &lt; 10ms under max load"</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'c')"><span class="opt-letter">D</span> "Meets performance requirements"</div>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+
+    <div class="quiz-question" id="q3">
+      <span class="q-num">3</span>
+      <span class="q-text">What does a traceability matrix link?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">A</span> Requirements → Design → Code → Tests</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">B</span> Developers → Managers → Clients</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">C</span> Bugs → Fixes → Releases</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">D</span> Features → Sprints → Deadlines</div>
+      </div>
+      <div class="quiz-feedback" id="q3-feedback"></div>
+    </div>
+
+    <div class="quiz-question" id="q4">
+      <span class="q-num">4</span>
+      <span class="q-text">In the SDD task breakdown for a UART driver, what should Task 1 typically be?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">A</span> Write unit tests</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">B</span> Implement core logic</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">C</span> Create configuration structure</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">D</span> Define the interface contract (header file)</div>
+      </div>
+      <div class="quiz-feedback" id="q4-feedback"></div>
+    </div>
+
+    <div class="quiz-question" id="q5">
+      <span class="q-num">5</span>
+      <span class="q-text">How much does SDD improve first-pass success rate compared to prompt-only?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">A</span> From 50% to 70%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">B</span> From 30% to 85% (+183%)</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">C</span> From 60% to 90%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'b')"><span class="opt-letter">D</span> From 40% to 80%</div>
+      </div>
+      <div class="quiz-feedback" id="q5-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== TAB SWITCHING ==========
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ========== EXPANDABLE CARDS ==========
+function toggleCard(el) {
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.card.expanded').forEach(c => c.classList.remove('expanded'));
+  if (!wasExpanded) el.classList.add('expanded');
+}
+
+// ========== WORKFLOW DETAIL ==========
+const workflowDetails = {
+  spec: '<strong>Phase 1: Specification</strong><br>Define functional requirements, non-functional constraints, interface contracts, and acceptance criteria. Review and approve before proceeding. This is the foundation — everything downstream depends on spec quality.',
+  plan: '<strong>Phase 2: Plan</strong><br>Break the specification into modules, identify dependencies between components, estimate effort and resources, define the implementation order, and plan the validation approach.',
+  tasks: '<strong>Phase 3: Tasks</strong><br>Create concrete implementation tasks with task-level acceptance criteria, assign dependencies, set milestones, and define the Definition of Done (DoD) for each task.',
+  impl: '<strong>Phase 4: Implementation</strong><br>Implement tasks in the defined order, follow coding standards, write unit tests derived from acceptance criteria, validate against spec, and update the traceability matrix.'
+};
+function showWorkflowDetail(key) {
+  const box = document.getElementById('workflowDetail');
+  box.innerHTML = workflowDetails[key];
+  box.classList.add('show');
+  setTimeout(() => box.classList.remove('show'), 6000);
+}
+
+// ========== QUIZ ==========
+const correctAnswers = { q1: 'B', q2: 'C', q3: 'A', q4: 'D', q5: 'B' };
+const explanations = {
+  q1: { correct: 'Correct! The SDD workflow flows: Spec → Plan → Tasks → Implementation. You start with a formal specification, plan the work, break it into tasks, then implement against the spec.', wrong: 'Not quite. The correct SDD workflow is: Spec → Plan → Tasks → Implementation. Each phase builds on the previous one.' },
+  q2: { correct: 'Correct! Good acceptance criteria are quantitative and testable. "Response time < 10ms under max load" is specific, measurable, and unambiguous.', wrong: 'Not quite. Good acceptance criteria must be quantitative (use numbers, not vague words), testable, and unambiguous. "< 10ms" is measurable; "fast" is not.' },
+  q3: { correct: 'Correct! A traceability matrix links Requirements → Design → Code → Tests bidirectionally. Forward links show coverage; backward links enable impact analysis.', wrong: 'Not quite. A traceability matrix links Requirements → Design → Code → Tests. This enables impact analysis (what code is affected by a requirement change) and coverage analysis (which requirements have tests).' },
+  q4: { correct: 'Correct! Task 1 should define the interface contract — create the header file with function signatures, data structures, and error codes. This establishes the API before implementation begins.', wrong: 'Not quite. Task 1 should define the interface contract (header file). This establishes the API that all subsequent tasks implement against, ensuring consistency.' },
+  q5: { correct: 'Correct! SDD improves first-pass success from 30% (prompt-only) to 85% (spec-driven) — a 183% improvement. Formal specifications dramatically reduce rework cycles.', wrong: 'Not quite. SDD improves first-pass success from 30% to 85%, a 183% improvement. This is because clear specifications eliminate ambiguity and rework.' }
+};
+let answered = 0;
+
+function checkAnswer(qId, el, correctLetter) {
+  const q = document.getElementById(qId);
+  if (q.classList.contains('answered')) return;
+  q.classList.add('answered');
+  answered++;
+
+  const opts = q.querySelectorAll('.quiz-opt');
+  const selectedLetter = el.querySelector('.opt-letter').textContent;
+  const isCorrect = selectedLetter === correctAnswers[qId];
+
+  opts.forEach(opt => {
+    opt.classList.add('disabled');
+    const letter = opt.querySelector('.opt-letter').textContent;
+    if (letter === correctAnswers[qId]) opt.classList.add('correct');
+  });
+  if (!isCorrect) el.classList.add('wrong');
+
+  const fb = document.getElementById(qId + '-feedback');
+  fb.textContent = isCorrect ? explanations[qId].correct : explanations[qId].wrong;
+  fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('quizProgressFill').style.width = (answered / 5 * 100) + '%';
+  document.getElementById('quizProgressText').textContent = answered + ' / 5 answered';
+}
+</script>
+</body>
+</html>

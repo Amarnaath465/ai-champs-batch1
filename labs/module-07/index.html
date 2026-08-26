@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 07 — Extend with MCP</title>
+<style>
+  :root {
+    --navy: #1a2332;
+    --navy-light: #2a3a4e;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --green: #22c55e;
+    --green-bg: #f0fdf4;
+    --red: #ef4444;
+    --red-bg: #fef2f2;
+    --orange: #f59e0b;
+    --orange-bg: #fffbeb;
+    --purple: #8b5cf6;
+    --purple-bg: #f5f3ff;
+    --teal: #14b8a6;
+    --teal-bg: #f0fdfa;
+    --pink: #ec4899;
+    --pink-bg: #fdf2f8;
+    --cyan: #06b6d4;
+    --cyan-bg: #ecfeff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-50); color: var(--gray-800); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: white; padding: 28px 32px; }
+  .header-badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 14px; color: rgba(255,255,255,0.75); }
+  .header-meta { display: flex; gap: 20px; margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6); }
+  .tab-bar { display: flex; gap: 0; background: white; border-bottom: 1px solid var(--gray-200); padding: 0 16px; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+  .tab-bar button { padding: 14px 18px; border: none; background: none; font-size: 13px; font-weight: 500; color: var(--gray-500); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-bar button:hover { color: var(--gray-700); }
+  .tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-bar button.quiz-tab { color: var(--purple); }
+  .tab-bar button.quiz-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+  .tab-content { display: none; padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+  .section-heading { font-size: 18px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+  .section-sub { font-size: 14px; color: var(--gray-500); margin-bottom: 20px; }
+  .card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .card-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-desc { font-size: 13px; color: var(--gray-600); line-height: 1.7; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--gray-200); margin: 16px 0; }
+  .compare-table th { background: var(--navy); color: white; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; }
+  .compare-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--gray-100); }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: var(--gray-50); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .badge-green { background: var(--green-bg); color: #166534; }
+  .badge-orange { background: var(--orange-bg); color: #92400e; }
+  .badge-red { background: var(--red-bg); color: #991b1b; }
+  .badge-purple { background: var(--purple-bg); color: #5b21b6; }
+  .badge-teal { background: var(--teal-bg); color: #115e59; }
+  .badge-blue { background: #eff6ff; color: #1e40af; }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 500; color: var(--gray-700); }
+  .expandable { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; }
+  .expand-header { padding: 12px 16px; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+  .expand-header:hover { background: var(--gray-50); }
+  .expand-arrow { transition: transform 0.3s; font-size: 12px; color: var(--gray-400); }
+  .expand-body { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; font-size: 13px; color: var(--gray-600); line-height: 1.7; }
+  .expandable.open .expand-body { max-height: 600px; padding: 12px 16px; }
+  .expandable.open .expand-arrow { transform: rotate(180deg); }
+  .highlight-box { border-radius: var(--radius-sm); padding: 16px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+  .highlight-box.green { background: var(--green-bg); border-left: 4px solid var(--green); }
+  .highlight-box.orange { background: var(--orange-bg); border-left: 4px solid var(--orange); }
+  .highlight-box.red { background: var(--red-bg); border-left: 4px solid var(--red); }
+  .highlight-box.blue { background: #eff6ff; border-left: 4px solid var(--accent); }
+  .highlight-box.purple { background: var(--purple-bg); border-left: 4px solid var(--purple); }
+  .highlight-box.teal { background: var(--teal-bg); border-left: 4px solid var(--teal); }
+  .highlight-box strong { font-weight: 600; }
+  .metric-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-value { font-size: 24px; font-weight: 700; color: var(--navy); min-width: 60px; }
+  .metric-label { font-size: 13px; color: var(--gray-600); }
+  .metric-bar { height: 6px; background: var(--gray-200); border-radius: 3px; flex: 1; }
+  .metric-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .quiz-question { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .quiz-question h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; gap: 8px; }
+  .quiz-question h3 .q-num { color: var(--purple); }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option { padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: flex-start; gap: 8px; }
+  .quiz-option:hover { border-color: var(--accent); background: #f8fafc; }
+  .quiz-option.correct { border-color: var(--green); background: var(--green-bg); color: #166534; }
+  .quiz-option.incorrect { border-color: var(--red); background: var(--red-bg); color: #991b1b; }
+  .quiz-option .opt-letter { font-weight: 700; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .quiz-option.correct .opt-letter { background: var(--green); color: white; }
+  .quiz-option.incorrect .opt-letter { background: var(--red); color: white; }
+  .quiz-explanation { margin-top: 12px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-600); display: none; line-height: 1.6; border-left: 3px solid var(--accent); }
+  .quiz-explanation.show { display: block; }
+  .code-block { background: var(--gray-800); color: #e2e8f0; padding: 14px 16px; border-radius: var(--radius-sm); font-family: 'SF Mono', Monaco, monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; margin: 12px 0; }
+  .code-block .comment { color: #94a3b8; }
+  .code-block .keyword { color: #c084fc; }
+  .code-block .string { color: #86efac; }
+  .code-block .func { color: #93c5fd; }
+  .code-block .type { color: #fbbf24; }
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+  .flow-step { background: white; border: 2px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; text-align: center; min-width: 110px; cursor: pointer; transition: all 0.2s; }
+  .flow-step:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .flow-step.active { background: var(--accent); color: white; }
+  .flow-step .step-num { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+  .flow-step .step-label { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .flow-arrow { font-size: 18px; color: var(--gray-400); padding: 0 6px; }
+  .timeline { position: relative; padding-left: 28px; margin: 16px 0; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--gray-200); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot { position: absolute; left: -24px; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: var(--shadow); }
+  .timeline-item-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-item-desc { font-size: 13px; color: var(--gray-600); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">Module 07</div>
+  <h1>Extend with MCP — Model Context Protocol</h1>
+  <p>The highest-leverage module — tool integration, reusable skills, and automated workflows</p>
+  <div class="header-meta">
+    <span>&#128337; 3.5 hours</span>
+    <span>&#129302; MCP + reusable skills</span>
+    <span>&#128295; Builds on Module 06 Testing</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="active" onclick="showTab(0)">Overview</button>
+  <button onclick="showTab(1)">What is MCP</button>
+  <button onclick="showTab(2)">Architecture</button>
+  <button onclick="showTab(3)">Reusable Skills</button>
+  <button onclick="showTab(4)">Workflows</button>
+  <button onclick="showTab(5)">Hands-On Lab</button>
+  <button class="quiz-tab" onclick="showTab(6)">Self-Check Quiz</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 0: Overview -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content active">
+  <div class="section-heading">Module 07 Overview</div>
+  <div class="section-sub">The single highest-leverage module for this cohort</div>
+
+  <div class="highlight-box red" style="margin-bottom: 20px;">
+    <strong>Why Module 07 is critical:</strong> MCP is ranked #1 training priority by 68% of the cohort — yet near-zero current exposure. This gap between demand and reality makes Module 07 the single highest-leverage learning opportunity in the programme. It must be protected from time compression.
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 20px;">
+    <div class="card" style="border-left: 4px solid var(--red);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+        <div class="card-title">Current State</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 12px;">MCP is the top stated want with the lowest current exposure. Respondents say "not sure", "need to explore", "hardly use, may be due to less awareness."</div>
+      <div class="metric-row" style="flex-direction: column; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="metric-value" style="color: var(--red); font-size: 20px;">~0%</div>
+          <div class="metric-label"><strong>Current MCP exposure</strong></div>
+        </div>
+        <div class="metric-bar" style="width: 100%; margin-top: 6px;"><div class="metric-fill" style="width: 2%; background: var(--red);"></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">Target State</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 12px;">MCP-enabled workflows: AI reads issues, locates code, implements fixes, runs tests, generates PRs with evidence. Repository-aware AI that understands your codebase.</div>
+      <div class="metric-row" style="flex-direction: column; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="metric-value" style="color: var(--green); font-size: 20px;">68%</div>
+          <div class="metric-label"><strong>Rank MCP as top priority</strong></div>
+        </div>
+        <div class="metric-bar" style="width: 100%; margin-top: 6px;"><div class="metric-fill" style="width: 68%; background: var(--green);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What is MCP -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#129302;</div>
+      <div class="card-title">What This Module Covers</div>
+    </div>
+    <div class="card-desc">
+      Module 07 introduces Model Context Protocol (MCP) — the standard that lets AI agents connect to external tools and data sources. You'll learn what MCP is, how it works, how to build reusable skills, and how to automate the full issue-to-PR workflow.
+    </div>
+    <div class="pill-list" style="margin-top: 12px;">
+      <span class="pill">Model Context Protocol</span>
+      <span class="pill">Tool Integration</span>
+      <span class="pill">Reusable Skills</span>
+      <span class="pill">Repository Awareness</span>
+      <span class="pill">Issue-to-PR Automation</span>
+      <span class="pill">Evidence Collection</span>
+    </div>
+  </div>
+
+  <!-- Preferred first workflow -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128736;</div>
+      <div class="card-title">Preferred First MCP Workflow (from cohort survey)</div>
+    </div>
+    <div class="card-desc" style="margin-bottom: 12px;">~Two-thirds of respondents independently converged on an issue-to-validated-PR workflow as their first MCP automation target.</div>
+    <div class="flow">
+      <div class="flow-step" style="border-color: var(--teal); min-width: 90px;">
+        <div class="step-num" style="color: var(--teal);">1</div>
+        <div class="step-label">Pull Issue</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color: var(--teal); min-width: 90px;">
+        <div class="step-num" style="color: var(--teal);">2</div>
+        <div class="step-label">Locate Code</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color: var(--teal); min-width: 90px;">
+        <div class="step-num" style="color: var(--teal);">3</div>
+        <div class="step-label">Implement</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color: var(--teal); min-width: 90px;">
+        <div class="step-num" style="color: var(--teal);">4</div>
+        <div class="step-label">Build/Test</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color: var(--teal); min-width: 90px;">
+        <div class="step-num" style="color: var(--teal);">5</div>
+        <div class="step-label">PR + Evidence</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color: var(--green); min-width: 90px;">
+        <div class="step-num" style="color: var(--green);">6</div>
+        <div class="step-label">Merge</div>
+      </div>
+    </div>
+    <div class="highlight-box teal" style="margin-top: 12px;">
+      <strong>This maps exactly to Module 7's hands-on exercise.</strong> You'll build this workflow step by step, from pulling an issue through to merging a validated PR.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 1: What is MCP -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">What is MCP?</div>
+  <div class="section-sub">Model Context Protocol — the standard for AI-tool integration</div>
+
+  <div class="highlight-box blue" style="margin-bottom: 20px;">
+    <strong>MCP = Model Context Protocol.</strong> An open standard that defines how AI models connect to external tools, data sources, and services. Think of it as a USB port for AI — a universal interface that lets any AI agent talk to any tool.
+  </div>
+
+  <!-- The analogy -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128161;</div>
+      <div class="card-title">The USB Analogy</div>
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="card" style="background: var(--gray-50);">
+        <div class="card-title" style="margin-bottom: 8px;">Before USB</div>
+        <div class="card-desc">Every device had a unique connector. Printers, scanners, keyboards — all different. You needed a specific cable for each device.</div>
+      </div>
+      <div class="card" style="background: var(--gray-50);">
+        <div class="card-title" style="margin-bottom: 8px;">Before MCP</div>
+        <div class="card-desc">Every AI tool integration was custom-built. GitHub, Jira, build systems — all different APIs, all different authentication, all different data formats.</div>
+      </div>
+      <div class="card" style="background: var(--green-bg);">
+        <div class="card-title" style="margin-bottom: 8px;">After USB</div>
+        <div class="card-desc">One universal connector. Any device plugs into any computer. Standard power, standard data, standard protocols.</div>
+      </div>
+      <div class="card" style="background: var(--green-bg);">
+        <div class="card-title" style="margin-bottom: 8px;">After MCP</div>
+        <div class="card-desc">One universal protocol. Any AI agent connects to any tool. Standard authentication, standard data format, standard interaction patterns.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What MCP enables -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128640;</div>
+      <div class="card-title">What MCP Enables</div>
+    </div>
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="card" style="border-top: 3px solid var(--green);">
+        <div class="card-header">
+          <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#128269;</div>
+          <div class="card-title">Repository Awareness</div>
+        </div>
+        <div class="card-desc">AI can read your codebase, understand structure, trace dependencies, and navigate files — not just guess from context.</div>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--accent);">
+        <div class="card-header">
+          <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128295;</div>
+          <div class="card-title">Tool Integration</div>
+        </div>
+        <div class="card-desc">AI can run builds, execute tests, query CI/CD, read Jira issues, and interact with external services.</div>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--purple);">
+        <div class="card-header">
+          <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128736;</div>
+          <div class="card-title">Automated Workflows</div>
+        </div>
+        <div class="card-desc">AI can orchestrate multi-step workflows: issue → code → test → PR → review — with human oversight at key gates.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Without vs with MCP -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128260;</div>
+      <div class="card-title">Without vs With MCP</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Capability</th><th>Without MCP</th><th>With MCP</th></tr>
+      <tr>
+        <td><strong>Code navigation</strong></td>
+        <td>AI guesses from context in the prompt</td>
+        <td>AI reads files, traces dependencies, understands structure</td>
+      </tr>
+      <tr>
+        <td><strong>Build/test</strong></td>
+        <td>Developer runs manually, pastes output</td>
+        <td>AI runs <code>make test</code>, reads results, acts on failures</td>
+      </tr>
+      <tr>
+        <td><strong>Issue tracking</strong></td>
+        <td>Developer copies issue text into prompt</td>
+        <td>AI reads Jira/GitHub issues directly</td>
+      </tr>
+      <tr>
+        <td><strong>PR creation</strong></td>
+        <td>Developer writes PR description manually</td>
+        <td>AI generates PR with spec traceability and test evidence</td>
+      </tr>
+      <tr>
+        <td><strong>Code review</strong></td>
+        <td>AI reviews only what's pasted in</td>
+        <td>AI reads full diff, related files, and historical patterns</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 2: Architecture -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">MCP Architecture</div>
+  <div class="section-sub">How MCP connects AI agents to tools and data sources</div>
+
+  <!-- Architecture diagram -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128736;</div>
+      <div class="card-title">MCP Architecture Overview</div>
+    </div>
+    <div class="flow" style="margin: 20px 0;">
+      <div class="flow-step" style="border-color: var(--purple); min-width: 120px;">
+        <div class="step-num" style="color: var(--purple);">AI Agent</div>
+        <div class="step-label">Claude / Copilot</div>
+      </div>
+      <div class="flow-arrow">&harr;</div>
+      <div class="flow-step active" style="min-width: 120px;">
+        <div class="step-num">MCP</div>
+        <div class="step-label">Protocol Layer</div>
+      </div>
+      <div class="flow-arrow">&harr;</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="flow-step" style="border-color: var(--green); min-width: 120px;">
+          <div class="step-num" style="color: var(--green);">Tools</div>
+          <div class="step-label">Build, Test, Lint</div>
+        </div>
+        <div class="flow-step" style="border-color: var(--teal); min-width: 120px;">
+          <div class="step-num" style="color: var(--teal);">Data</div>
+          <div class="step-label">Repo, Issues, Docs</div>
+        </div>
+        <div class="flow-step" style="border-color: var(--orange); min-width: 120px;">
+          <div class="step-num" style="color: var(--orange);">Services</div>
+          <div class="step-label">Jira, GitHub, CI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three components -->
+  <div class="section-heading" style="font-size: 15px;">Three Core Components</div>
+  <div class="grid-3" style="margin-bottom: 20px;">
+    <div class="card" style="border-top: 3px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">A</div>
+        <div class="card-title">AI Agent (Host)</div>
+      </div>
+      <div class="card-desc">The AI model that wants to use tools. It sends requests to the MCP server and receives results. Examples: Claude, GitHub Copilot, custom agents.</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--accent);">
+      <div class="card-header">
+        <div class="card-icon" style="background: #eff6ff; color: var(--accent);">S</div>
+        <div class="card-title">MCP Server</div>
+      </div>
+      <div class="card-desc">The middleware that exposes tools and data to the AI. It translates AI requests into tool calls and returns results in a standard format.</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">T</div>
+        <div class="card-title">Tools &amp; Resources</div>
+      </div>
+      <div class="card-desc">The actual capabilities: file system access, build commands, test runners, API endpoints, database queries. Each tool has a defined schema.</div>
+    </div>
+  </div>
+
+  <!-- MCP primitives -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128295;</div>
+      <div class="card-title">MCP Primitives</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Primitive</th><th>Purpose</th><th>Example</th></tr>
+      <tr>
+        <td><strong>Tools</strong></td>
+        <td>Actions the AI can perform</td>
+        <td><code>run_tests()</code>, <code>read_file()</code>, <code>create_pr()</code></td>
+      </tr>
+      <tr>
+        <td><strong>Resources</strong></td>
+        <td>Data the AI can read</td>
+        <td>File contents, issue details, build logs, test results</td>
+      </tr>
+      <tr>
+        <td><strong>Prompts</strong></td>
+        <td>Pre-defined interaction patterns</td>
+        <td><code>/review-pr</code>, <code>/fix-issue</code>, <code>/explain-code</code></td>
+      </tr>
+      <tr>
+        <td><strong>Sampling</strong></td>
+        <td>AI-initiated requests back to the host</td>
+        <td>Requesting human review, asking for clarification</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- How it works -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128260;</div>
+      <div class="card-title">How MCP Works (Step by Step)</div>
+    </div>
+    <div class="timeline" style="margin-top: 12px;">
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--purple);"></div>
+        <div class="timeline-item-title">1. AI receives a task</div>
+        <div class="timeline-item-desc">User asks: "Fix the bug in sensor_poll_all() and write tests." The AI decides it needs tools.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">2. AI requests available tools</div>
+        <div class="timeline-item-desc">AI queries the MCP server: "What tools can I use?" Server returns: read_file, run_tests, create_pr, etc.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">3. AI calls a tool</div>
+        <div class="timeline-item-desc">AI calls <code>read_file("sensor_poll.c")</code>. MCP server executes the tool and returns the file contents.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">4. AI processes result</div>
+        <div class="timeline-item-desc">AI reads the code, understands the bug, generates a fix, and calls <code>write_file()</code> to apply it.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--teal);"></div>
+        <div class="timeline-item-title">5. AI verifies</div>
+        <div class="timeline-item-desc">AI calls <code>run_tests()</code>. Tests pass. AI calls <code>create_pr()</code> with the fix and test evidence.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 3: Reusable Skills -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Reusable Skills</div>
+  <div class="section-sub">Package MCP workflows into repeatable, shareable capabilities</div>
+
+  <div class="highlight-box purple" style="margin-bottom: 20px;">
+    <strong>Skills = codified workflows.</strong> A skill is a reusable MCP workflow that captures a specific engineering task: how to pull an issue, how to write a spec, how to run tests, how to create a PR. Skills are shared across the team and improve over time.
+  </div>
+
+  <!-- What is a skill -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128218;</div>
+      <div class="card-title">What is a Skill?</div>
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="card" style="background: var(--gray-50);">
+        <div class="card-title" style="margin-bottom: 8px;">Skill = Recipe</div>
+        <div class="card-desc">Like a recipe: step-by-step instructions for a specific dish. Anyone can follow it and get the same result. Skills capture engineering workflows the same way.</div>
+      </div>
+      <div class="card" style="background: var(--gray-50);">
+        <div class="card-title" style="margin-bottom: 8px;">Skill = Test Pattern</div>
+        <div class="card-desc">Like a test pattern: a proven approach to a common problem. You don't reinvent the solution each time — you apply the pattern. Skills are the same for engineering workflows.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skill anatomy -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128295;</div>
+      <div class="card-title">Skill Anatomy</div>
+    </div>
+    <div class="code-block"><span class="comment"># Skill: fix-issue</span>
+<span class="comment"># Trigger: "fix the bug in #142"</span>
+<span class="comment"># Steps:</span>
+
+<span class="keyword">1. READ</span> issue from GitHub/Jira
+   <span class="comment">→ Extract: description, acceptance criteria, priority</span>
+
+<span class="keyword">2. LOCATE</span> relevant code
+   <span class="comment">→ Search codebase for related functions, files, tests</span>
+
+<span class="keyword">3. ANALYZE</span> root cause
+   <span class="comment">→ Read code, trace call hierarchy, identify bug</span>
+
+<span class="keyword">4. IMPLEMENT</span> fix
+   <span class="comment">→ Apply minimal change, follow coding standards</span>
+
+<span class="keyword">5. TEST</span> the fix
+   <span class="comment">→ Run existing tests, add new test for the bug</span>
+
+<span class="keyword">6. CREATE</span> PR
+   <span class="comment">→ Title, description, traceability, test evidence</span>
+
+<span class="keyword">7. REQUEST</span> human review
+   <span class="comment">→ Flag for human approval before merge</span></div>
+  </div>
+
+  <!-- Benefits of skills -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+      <div class="card-title">Benefits of Reusable Skills</div>
+    </div>
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="card" style="border-top: 3px solid var(--green);">
+        <div class="card-header">
+          <div class="card-icon" style="background: var(--green-bg); color: var(--green);">1</div>
+          <div class="card-title">Consistency</div>
+        </div>
+        <div class="card-desc">Every team member gets the same workflow. No individual variations, no missed steps. Quality is predictable.</div>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--accent);">
+        <div class="card-header">
+          <div class="card-icon" style="background: #eff6ff; color: var(--accent);">2</div>
+          <div class="card-title">Improvement</div>
+        </div>
+        <div class="card-desc">Skills improve over time. When someone finds a better approach, the skill is updated. Everyone benefits from the improvement.</div>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--purple);">
+        <div class="card-header">
+          <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">3</div>
+          <div class="card-title">Shareability</div>
+        </div>
+        <div class="card-desc">Skills are shared across teams and projects. A good fix-issue skill works for embedded firmware and web apps.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skill examples -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128736;</div>
+      <div class="card-title">Embedded-Specific Skills</div>
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>analyze-blast-radius</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Given a function or module to change: map all callers, dependents, tests, and configuration touchpoints. Output a blast-radius report with risk assessment. Used before any brownfield change.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>write-spec-for-issue</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Read a GitHub/Jira issue, analyze the codebase context, and generate a complete specification with requirements, constraints, interfaces, and acceptance criteria. Follows the SDD five-point quality bar.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>generate-tests-from-spec</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Read a specification and generate unit tests for each acceptance criterion. Includes boundary tests, error-path tests, and mock setup. Uses the project's test framework.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>validate-regression</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Run the full test suite before and after a change. Compare results, identify regressions, and produce a regression report. If regressions found, suggest rollback strategy.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 4: Workflows -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Automated Workflows</div>
+  <div class="section-sub">End-to-end automation — from issue to validated PR</div>
+
+  <div class="highlight-box green" style="margin-bottom: 20px;">
+    <strong>The dream workflow:</strong> An issue appears. AI reads it, finds the relevant code, implements a fix, writes tests, runs the build, creates a PR with evidence, and requests your review. You approve. Ship it. This is what MCP makes possible.
+  </div>
+
+  <!-- Workflow flow -->
+  <div class="flow" style="margin-bottom: 20px;">
+    <div class="flow-step" style="border-color: var(--teal); min-width: 80px;">
+      <div class="step-num" style="color: var(--teal);">Issue</div>
+      <div class="step-label">Jira/GitHub</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--accent); min-width: 80px;">
+      <div class="step-num" style="color: var(--accent);">Locate</div>
+      <div class="step-label">Code & Docs</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--purple); min-width: 80px;">
+      <div class="step-num" style="color: var(--purple);">Implement</div>
+      <div class="step-label">Fix/Feature</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--orange); min-width: 80px;">
+      <div class="step-num" style="color: var(--orange);">Build</div>
+      <div class="step-label">Compile</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--green); min-width: 80px;">
+      <div class="step-num" style="color: var(--green);">Test</div>
+      <div class="step-label">Verify</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--pink); min-width: 80px;">
+      <div class="step-num" style="color: var(--pink);">PR</div>
+      <div class="step-label">Evidence</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step" style="border-color: var(--teal); min-width: 80px;">
+      <div class="step-num" style="color: var(--teal);">Review</div>
+      <div class="step-label">Human Gate</div>
+    </div>
+  </div>
+
+  <!-- Workflow steps detail -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128260;</div>
+      <div class="card-title">Workflow Step by Step</div>
+    </div>
+    <div class="timeline" style="margin-top: 12px;">
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--teal);"></div>
+        <div class="timeline-item-title">1. Pull Issue</div>
+        <div class="timeline-item-desc">AI reads the issue from Jira/GitHub via MCP. Extracts: description, acceptance criteria, priority, related context. No manual copy-paste.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">2. Locate Code & Docs</div>
+        <div class="timeline-item-desc">AI uses MCP to search the repository: find related files, read documentation, trace dependencies. Repository-aware navigation.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--purple);"></div>
+        <div class="timeline-item-title">3. Implement Fix</div>
+        <div class="timeline-item-desc">AI implements the change using Copilot. Minimal diff, follows coding standards, respects existing patterns. Uses context from the spec.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">4. Run Build</div>
+        <div class="timeline-item-desc">AI calls <code>make</code> or equivalent via MCP. Verifies compilation succeeds. If build fails, diagnoses and fixes before proceeding.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">5. Run Tests</div>
+        <div class="timeline-item-desc">AI calls <code>make test</code> via MCP. Verifies all tests pass. If tests fail, diagnoses the failure and fixes it. Runs regression suite.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--pink);"></div>
+        <div class="timeline-item-title">6. Create PR with Evidence</div>
+        <div class="timeline-item-desc">AI creates a PR with: description linking to the issue, test results, build log, traceability matrix. Evidence included automatically.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--teal);"></div>
+        <div class="timeline-item-title">7. Human Review Gate</div>
+        <div class="timeline-item-desc">AI requests human review. Human reviews the PR with full context. Approves, requests changes, or rejects. Human is always in the loop.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Human oversight -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+      <div class="card-title">Human Oversight is Non-Negotiable</div>
+    </div>
+    <div class="card-desc">
+      AI automates the routine work — locating code, implementing fixes, running tests, creating PRs. But the human review gate is never automated. You approve. You decide. AI assists; humans decide.
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="highlight-box green">
+        <strong>AI handles:</strong> Code navigation, implementation, test generation, build execution, PR creation, evidence collection.
+      </div>
+      <div class="highlight-box red">
+        <strong>Human decides:</strong> Code review, architectural decisions, merge approval, exception handling, production deployment.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 5: Hands-On Lab -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Hands-On Lab</div>
+  <div class="section-sub">Build the issue-to-PR workflow step by step</div>
+
+  <div class="highlight-box blue" style="margin-bottom: 20px;">
+    <strong>Lab structure:</strong> You'll build the complete issue-to-validated-PR workflow using MCP. Each exercise adds one capability. By the end, you have a working automated workflow that you can adapt for your team.
+  </div>
+
+  <!-- Lab exercises -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128218;</div>
+      <div class="card-title">Lab Exercises (3.5 hours)</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>#</th><th>Exercise</th><th>Duration</th><th>What You Build</th></tr>
+      <tr>
+        <td>1</td>
+        <td><strong>MCP Setup & First Tool</strong></td>
+        <td>30 min</td>
+        <td>Configure MCP server, connect first tool (file read)</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>Repository Awareness</strong></td>
+        <td>40 min</td>
+        <td>AI reads codebase, traces dependencies, navigates files</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Issue-to-Code</strong></td>
+        <td>45 min</td>
+        <td>AI reads issue, locates code, implements fix</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>Build & Test Automation</strong></td>
+        <td>40 min</td>
+        <td>AI runs build, runs tests, handles failures</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>PR with Evidence</strong></td>
+        <td>35 min</td>
+        <td>AI creates PR with traceability and test results</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>End-to-End Run</strong></td>
+        <td>30 min</td>
+        <td>Full workflow: issue → code → test → PR → review</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- What you'll learn -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#128640;</div>
+      <div class="card-title">What You'll Learn</div>
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>MCP Configuration</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          How to configure an MCP server, register tools, set up authentication, and connect to your development environment. Practical setup for real projects.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Tool Design</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          How to design MCP tools: what parameters they accept, what they return, how to handle errors. Good tool design makes AI more effective.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Workflow Orchestration</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          How to chain MCP tools into multi-step workflows. How the AI decides which tool to call next. How to handle branching and error recovery.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Human-in-the-Loop</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          How to design workflows with human oversight at the right points. When to pause for approval, when to proceed automatically, how to present decisions.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success criteria -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#9745;</div>
+      <div class="card-title">Lab Success Criteria</div>
+    </div>
+    <div class="highlight-box green" style="margin-top: 12px;">
+      <strong>Walk out with:</strong> A working MCP-enabled workflow that takes a GitHub issue, implements a fix, runs tests, creates a PR with evidence, and requests human review — all orchestrated by AI with you in the oversight role.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 6: Self-Check Quiz -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Self-Check Quiz</div>
+  <div class="section-sub">Verify your understanding of Module 07 key concepts</div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q1.</span> What percentage of the cohort ranked MCP as their #1 training priority?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">A</span>
+        <span>42%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">B</span>
+        <span>53%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 1)">
+        <span class="opt-letter">C</span>
+        <span>68%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">D</span>
+        <span>84%</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-1">
+      <strong>Correct!</strong> 68% of the cohort ranked MCP as their #1 training priority — the highest of any topic. Yet near-zero current MCP exposure. This gap makes Module 07 the single highest-leverage module in the programme.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q2.</span> What is MCP in the context of AI tool integration?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">A</span>
+        <span>Managed Code Pipeline — a CI/CD automation tool</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 2)">
+        <span class="opt-letter">B</span>
+        <span>Model Context Protocol — a standard for AI-tool integration</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">C</span>
+        <span>Multi-Channel Processing — parallel task execution</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">D</span>
+        <span>Modular Code Packaging — component-based architecture</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-2">
+      <strong>Correct!</strong> MCP = Model Context Protocol. It's an open standard that defines how AI models connect to external tools, data sources, and services. Like USB for AI — a universal interface that lets any AI agent talk to any tool.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q3.</span> What is the preferred first MCP workflow identified by the cohort?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">A</span>
+        <span>Automated code review</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 3)">
+        <span class="opt-letter">B</span>
+        <span>Issue-to-validated-PR workflow</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">C</span>
+        <span>Test generation pipeline</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">D</span>
+        <span>Documentation automation</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-3">
+      <strong>Correct!</strong> ~Two-thirds of respondents independently converged on an issue-to-validated-PR workflow: pull issue → locate code → implement fix → run build/test → create PR with evidence → human review → merge. This maps directly to Module 07's hands-on exercise.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q4.</span> What are the three core components of MCP architecture?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">A</span>
+        <span>Compiler, linker, debugger</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">B</span>
+        <span>Client, server, database</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 4)">
+        <span class="opt-letter">C</span>
+        <span>AI Agent (Host), MCP Server, Tools &amp; Resources</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">D</span>
+        <span>Input, processing, output</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-4">
+      <strong>Correct!</strong> The three core MCP components: (1) AI Agent (Host) — the AI model that wants to use tools, (2) MCP Server — the middleware that exposes tools and data, (3) Tools & Resources — the actual capabilities (file access, build commands, API endpoints).
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q5.</span> In an MCP-automated workflow, who makes the final merge decision?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">A</span>
+        <span>The AI agent — it has all the evidence</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 5)">
+        <span class="opt-letter">B</span>
+        <span>The human reviewer — AI assists, humans decide</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">C</span>
+        <span>The CI/CD pipeline — if tests pass, auto-merge</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">D</span>
+        <span>The tech lead — they delegate to AI</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-5">
+      <strong>Correct!</strong> Human oversight is non-negotiable. AI automates the routine work — locating code, implementing, testing, creating PRs. But the human review gate is never automated. You approve. You decide. AI assists; humans decide.
+    </div>
+  </div>
+
+  <div class="highlight-box purple" style="margin-top: 20px;">
+    <strong>Module 07 Complete.</strong> You now understand MCP — what it is, how it works, how to build reusable skills, and how to automate the issue-to-PR workflow. This is the highest-leverage module for your team. Next: <strong>Module 08 — Studio-Style Workflows</strong> (Atlassian Rovo Studio for business/program roles).
+  </div>
+</div>
+
+<script>
+function showTab(index) {
+  document.querySelectorAll('.tab-content').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+  document.querySelectorAll('.tab-bar button').forEach((b, i) => {
+    b.classList.toggle('active', i === index);
+  });
+}
+
+function toggleExpand(el) {
+  el.classList.toggle('open');
+}
+
+function checkQuiz(option, isCorrect, qNum) {
+  const question = option.closest('.quiz-question');
+  if (question.dataset.answered) return;
+  question.dataset.answered = 'true';
+
+  const options = question.querySelectorAll('.quiz-option');
+  options.forEach(o => { o.style.pointerEvents = 'none'; });
+
+  if (isCorrect) {
+    option.classList.add('correct');
+  } else {
+    option.classList.add('incorrect');
+    options.forEach(o => {
+      if (o !== option) {
+        const onclick = o.getAttribute('onclick');
+        if (onclick && onclick.includes('true')) {
+          o.classList.add('correct');
+        }
+      }
+    });
+  }
+
+  const explanation = document.getElementById('explanation-' + qNum);
+  if (explanation) explanation.classList.add('show');
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 06 — Validate with Testing</title>
+<style>
+  :root {
+    --navy: #1a2332;
+    --navy-light: #2a3a4e;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --green: #22c55e;
+    --green-bg: #f0fdf4;
+    --red: #ef4444;
+    --red-bg: #fef2f2;
+    --orange: #f59e0b;
+    --orange-bg: #fffbeb;
+    --purple: #8b5cf6;
+    --purple-bg: #f5f3ff;
+    --teal: #14b8a6;
+    --teal-bg: #f0fdfa;
+    --pink: #ec4899;
+    --pink-bg: #fdf2f8;
+    --cyan: #06b6d4;
+    --cyan-bg: #ecfeff;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-50); color: var(--gray-800); line-height: 1.6; }
+  .header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: white; padding: 28px 32px; }
+  .header-badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 14px; color: rgba(255,255,255,0.75); }
+  .header-meta { display: flex; gap: 20px; margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.6); }
+  .tab-bar { display: flex; gap: 0; background: white; border-bottom: 1px solid var(--gray-200); padding: 0 16px; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+  .tab-bar button { padding: 14px 18px; border: none; background: none; font-size: 13px; font-weight: 500; color: var(--gray-500); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab-bar button:hover { color: var(--gray-700); }
+  .tab-bar button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-bar button.quiz-tab { color: var(--purple); }
+  .tab-bar button.quiz-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+  .tab-content { display: none; padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+  .section-heading { font-size: 18px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; }
+  .section-sub { font-size: 14px; color: var(--gray-500); margin-bottom: 20px; }
+  .card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .card-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-desc { font-size: 13px; color: var(--gray-600); line-height: 1.7; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--gray-200); margin: 16px 0; }
+  .compare-table th { background: var(--navy); color: white; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; }
+  .compare-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--gray-100); }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: var(--gray-50); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .badge-green { background: var(--green-bg); color: #166534; }
+  .badge-orange { background: var(--orange-bg); color: #92400e; }
+  .badge-red { background: var(--red-bg); color: #991b1b; }
+  .badge-purple { background: var(--purple-bg); color: #5b21b6; }
+  .badge-teal { background: var(--teal-bg); color: #115e59; }
+  .badge-blue { background: #eff6ff; color: #1e40af; }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill { background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 500; color: var(--gray-700); }
+  .expandable { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; }
+  .expand-header { padding: 12px 16px; background: white; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+  .expand-header:hover { background: var(--gray-50); }
+  .expand-arrow { transition: transform 0.3s; font-size: 12px; color: var(--gray-400); }
+  .expand-body { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; font-size: 13px; color: var(--gray-600); line-height: 1.7; }
+  .expandable.open .expand-body { max-height: 600px; padding: 12px 16px; }
+  .expandable.open .expand-arrow { transform: rotate(180deg); }
+  .highlight-box { border-radius: var(--radius-sm); padding: 16px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+  .highlight-box.green { background: var(--green-bg); border-left: 4px solid var(--green); }
+  .highlight-box.orange { background: var(--orange-bg); border-left: 4px solid var(--orange); }
+  .highlight-box.red { background: var(--red-bg); border-left: 4px solid var(--red); }
+  .highlight-box.blue { background: #eff6ff; border-left: 4px solid var(--accent); }
+  .highlight-box.purple { background: var(--purple-bg); border-left: 4px solid var(--purple); }
+  .highlight-box.teal { background: var(--teal-bg); border-left: 4px solid var(--teal); }
+  .highlight-box strong { font-weight: 600; }
+  .artifact-card { border: 1px solid var(--gray-200); border-radius: var(--radius-sm); padding: 14px; background: white; }
+  .artifact-name { font-family: 'SF Mono', Monaco, monospace; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .artifact-desc { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+  .metric-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-value { font-size: 24px; font-weight: 700; color: var(--navy); min-width: 60px; }
+  .metric-label { font-size: 13px; color: var(--gray-600); }
+  .metric-bar { height: 6px; background: var(--gray-200); border-radius: 3px; flex: 1; }
+  .metric-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .quiz-question { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .quiz-question h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; gap: 8px; }
+  .quiz-question h3 .q-num { color: var(--purple); }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option { padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: flex-start; gap: 8px; }
+  .quiz-option:hover { border-color: var(--accent); background: #f8fafc; }
+  .quiz-option.correct { border-color: var(--green); background: var(--green-bg); color: #166534; }
+  .quiz-option.incorrect { border-color: var(--red); background: var(--red-bg); color: #991b1b; }
+  .quiz-option .opt-letter { font-weight: 700; flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .quiz-option.correct .opt-letter { background: var(--green); color: white; }
+  .quiz-option.incorrect .opt-letter { background: var(--red); color: white; }
+  .quiz-explanation { margin-top: 12px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-sm); font-size: 13px; color: var(--gray-600); display: none; line-height: 1.6; border-left: 3px solid var(--accent); }
+  .quiz-explanation.show { display: block; }
+  .pyramid { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 20px 0; }
+  .pyramid-level { text-align: center; padding: 14px 20px; font-size: 13px; font-weight: 600; color: white; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; }
+  .pyramid-level:hover { transform: scale(1.02); }
+  .pyramid-arrow { font-size: 16px; color: var(--gray-400); margin: 4px 0; }
+  .code-block { background: var(--gray-800); color: #e2e8f0; padding: 14px 16px; border-radius: var(--radius-sm); font-family: 'SF Mono', Monaco, monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; margin: 12px 0; }
+  .code-block .comment { color: #94a3b8; }
+  .code-block .keyword { color: #c084fc; }
+  .code-block .string { color: #86efac; }
+  .code-block .func { color: #93c5fd; }
+  .code-block .type { color: #fbbf24; }
+  .code-block .num { color: #f87171; }
+  .timeline { position: relative; padding-left: 28px; margin: 16px 0; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--gray-200); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot { position: absolute; left: -24px; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: var(--shadow); }
+  .timeline-item-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-item-desc { font-size: 13px; color: var(--gray-600); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">Module 06</div>
+  <h1>Validate with Testing</h1>
+  <p>Test strategy, mocks/stubs, and regression protection — closing the cohort's biggest readiness gap</p>
+  <div class="header-meta">
+    <span>&#128337; 3 hours</span>
+    <span>&#9989; Test strategy + AI-assisted generation</span>
+    <span>&#128295; Builds on Module 05 SDLC</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="active" onclick="showTab(0)">Overview</button>
+  <button onclick="showTab(1)">Test Strategy</button>
+  <button onclick="showTab(2)">Mocks &amp; Stubs</button>
+  <button onclick="showTab(3)">Regression</button>
+  <button onclick="showTab(4)">AI-Assisted</button>
+  <button onclick="showTab(5)">Embedded Challenges</button>
+  <button class="quiz-tab" onclick="showTab(6)">Self-Check Quiz</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 0: Overview -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content active">
+  <div class="section-heading">Module 06 Overview</div>
+  <div class="section-sub">Close the testing gap — the highest-value module for risk reduction</div>
+
+  <div class="highlight-box red" style="margin-bottom: 20px;">
+    <strong>The testing gap:</strong> 42% of the cohort have little more than compile-check pipeline maturity. Only 21% have mature automated validation. This is the single most significant readiness gap — and the highest-value module for reducing risk.
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 20px;">
+    <div class="card" style="border-left: 4px solid var(--red);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+        <div class="card-title">Current State</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 12px;">Most teams rely on manual testing or basic compile checks. Test coverage is ad-hoc, regression testing is manual, and AI-generated code ships without automated validation.</div>
+      <div class="grid-2" style="gap: 8px;">
+        <div class="metric-row" style="flex-direction: column; align-items: flex-start;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="metric-value" style="color: var(--red); font-size: 20px;">42%</div>
+            <div class="metric-label"><strong>Little automated validation</strong></div>
+          </div>
+          <div class="metric-bar" style="width: 100%; margin-top: 6px;"><div class="metric-fill" style="width: 42%; background: var(--red);"></div></div>
+        </div>
+        <div class="metric-row" style="flex-direction: column; align-items: flex-start;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="metric-value" style="color: var(--orange); font-size: 20px;">21%</div>
+            <div class="metric-label"><strong>Mature pipeline</strong></div>
+          </div>
+          <div class="metric-bar" style="width: 100%; margin-top: 6px;"><div class="metric-fill" style="width: 21%; background: var(--orange);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">Target State</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 12px;">Every change has a test. Every test maps to a spec criterion. AI assists test generation. Regression testing is automated. Coverage is measurable and improving.</div>
+      <div class="grid-2" style="gap: 8px;">
+        <div class="metric-row" style="flex-direction: column; align-items: flex-start;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="metric-value" style="color: var(--green); font-size: 20px;">100%</div>
+            <div class="metric-label"><strong>Changes have tests</strong></div>
+          </div>
+          <div class="metric-bar" style="width: 100%; margin-top: 6px;"><div class="metric-fill" style="width: 100%; background: var(--green);"></div></div>
+        </div>
+        <div class="metric-row" style="flex-direction: column; align-items: flex-start;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="metric-value" style="color: var(--green); font-size: 20px;">Auto</div>
+            <div class="metric-label"><strong>Regression on every commit</strong></div>
+          </div>
+          <div class="metric-bar" style="width: 100%; margin-top: 6px;"><div class="metric-fill" style="width: 100%; background: var(--green);"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What this module covers -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#128218;</div>
+      <div class="card-title">What This Module Covers</div>
+    </div>
+    <div class="card-desc">
+      Module 06 gives you a complete testing discipline for embedded software — from strategy (what to test, when, how) through technique (mocks, stubs, fakes) to automation (AI-assisted test generation, regression protection). This is the module that turns "we compile" into "we prove."
+    </div>
+    <div class="pill-list" style="margin-top: 12px;">
+      <span class="pill">Test Strategy</span>
+      <span class="pill">Test Pyramid</span>
+      <span class="pill">Mocks &amp; Stubs</span>
+      <span class="pill">Regression Testing</span>
+      <span class="pill">AI-Assisted Generation</span>
+      <span class="pill">Embedded Constraints</span>
+    </div>
+  </div>
+
+  <!-- Test Pyramid -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#9650;</div>
+      <div class="card-title">The Embedded Test Pyramid</div>
+    </div>
+    <div class="card-desc">Click each level to learn what it covers</div>
+    <div class="pyramid">
+      <div class="pyramid-level" style="width: 200px; background: var(--red);" onclick="showPyramidDetail(2)">
+        E2E / Integration
+      </div>
+      <div class="pyramid-arrow">&#9660;</div>
+      <div class="pyramid-level" style="width: 300px; background: var(--orange);" onclick="showPyramidDetail(1)">
+        Integration Tests
+      </div>
+      <div class="pyramid-arrow">&#9660;</div>
+      <div class="pyramid-level" style="width: 400px; background: var(--green);" onclick="showPyramidDetail(0)">
+        Unit Tests (Foundation)
+      </div>
+    </div>
+
+    <div id="pyramid-detail-0" class="card" style="margin-top: 12px;">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#9679;</div>
+        <div class="card-title">Unit Tests — The Foundation</div>
+      </div>
+      <div class="card-desc">
+        Test individual functions in isolation. Fast, cheap, deterministic. In embedded: test pure logic, state machines, data transformations, protocol parsing. Use mocks for hardware dependencies. This is where AI assists most effectively.
+      </div>
+      <div class="pill-list">
+        <span class="pill">Fast execution</span>
+        <span class="pill">No hardware needed</span>
+        <span class="pill">Deterministic</span>
+        <span class="pill">AI-generatable</span>
+      </div>
+    </div>
+
+    <div id="pyramid-detail-1" class="card" style="margin-top: 12px; display: none;">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#9679;</div>
+        <div class="card-title">Integration Tests — Module Interaction</div>
+      </div>
+      <div class="card-desc">
+        Test how modules work together. Verify API contracts, data flow between components, and module boundary behavior. In embedded: test HAL interactions, inter-module communication, configuration loading. Slower than unit tests, but catch interface mismatches.
+      </div>
+      <div class="pill-list">
+        <span class="pill">API contracts</span>
+        <span class="pill">Data flow</span>
+        <span class="pill">Module boundaries</span>
+        <span class="pill">HAL interactions</span>
+      </div>
+    </div>
+
+    <div id="pyramid-detail-2" class="card" style="margin-top: 12px; display: none;">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9679;</div>
+        <div class="card-title">E2E / Integration — Full System</div>
+      </div>
+      <div class="card-desc">
+        Test the complete system or feature end-to-end. In embedded: may require hardware, target environment, or simulation. Slowest and most expensive, but catches system-level issues. Use sparingly — focus on critical paths and regression-prone areas.
+      </div>
+      <div class="pill-list">
+        <span class="pill">Full system</span>
+        <span class="pill">Hardware may be needed</span>
+        <span class="pill">Slowest</span>
+        <span class="pill">Critical paths only</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 1: Test Strategy -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Test Strategy</div>
+  <div class="section-sub">What to test, when to test, and how to prove it</div>
+
+  <div class="highlight-box blue" style="margin-bottom: 20px;">
+    <strong>Test strategy is not optional.</strong> Without a strategy, testing is ad-hoc — some things get tested, others don't, and you never know which. A test strategy defines what gets tested, at what level, with what tools, and how results are measured.
+  </div>
+
+  <!-- Strategy pillars -->
+  <div class="section-heading" style="font-size: 15px;">Three Pillars of Test Strategy</div>
+  <div class="grid-3" style="margin-bottom: 20px;">
+    <div class="card" style="border-top: 3px solid var(--accent);">
+      <div class="card-header">
+        <div class="card-icon" style="background: #eff6ff; color: var(--accent);">1</div>
+        <div class="card-title">What to Test</div>
+      </div>
+      <div class="card-desc">Map tests to spec acceptance criteria. Every criterion must have at least one test. If it's not testable, it's not a valid criterion.</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--teal);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">2</div>
+        <div class="card-title">How to Test</div>
+      </div>
+      <div class="card-desc">Choose the right test level (unit/integration/E2E) for each criterion. Unit tests for logic, integration for interfaces, E2E for critical paths.</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">3</div>
+        <div class="card-title">When to Test</div>
+      </div>
+      <div class="card-desc">Test at the right time: unit tests during implementation, integration tests after module integration, regression tests on every commit.</div>
+    </div>
+  </div>
+
+  <!-- Test mapping -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#128203;</div>
+      <div class="card-title">Spec-to-Test Mapping</div>
+    </div>
+    <div class="card-desc">
+      The bridge between specification and testing: every acceptance criterion maps to a test. This is how you prove the implementation matches the spec.
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Spec Criterion</th><th>Test Type</th><th>Test Level</th><th>Proof</th></tr>
+      <tr>
+        <td>Function returns correct error code for invalid input</td>
+        <td>Unit test</td>
+        <td>Unit (mocked HW)</td>
+        <td>Assert error code matches spec</td>
+      </tr>
+      <tr>
+        <td>Module A sends data to Module B correctly</td>
+        <td>Integration test</td>
+        <td>Integration</td>
+        <td>Verify data received matches sent</td>
+      </tr>
+      <tr>
+        <td>Feature works end-to-end on target</td>
+        <td>E2E test</td>
+        <td>E2E (hardware/sim)</td>
+        <td>Full system verification</td>
+      </tr>
+      <tr>
+        <td>Timing constraint met under worst case</td>
+        <td>Performance test</td>
+        <td>Integration + profiling</td>
+        <td>Measured execution time &lt; deadline</td>
+      </tr>
+      <tr>
+        <td>Memory usage stays within budget</td>
+        <td>Resource test</td>
+        <td>Unit + build analysis</td>
+        <td>Measured usage &lt; budget</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Test categories for embedded -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128295;</div>
+      <div class="card-title">Embedded-Specific Test Categories</div>
+    </div>
+    <div class="expandable" onclick="toggleExpand(this)">
+      <div class="expand-header">
+        <span><strong>Functional Tests</strong> — Does it do what the spec says?</span>
+        <span class="expand-arrow">&#9660;</span>
+      </div>
+      <div class="expand-body">
+        Core correctness tests. For each function: verify outputs for valid inputs, verify error handling for invalid inputs, verify edge cases (empty, null, max-size). These are the most common and most valuable tests.
+      </div>
+    </div>
+    <div class="expandable" onclick="toggleExpand(this)">
+      <div class="expand-header">
+        <span><strong>Boundary Tests</strong> — What happens at the edges?</span>
+        <span class="expand-arrow">&#9660;</span>
+      </div>
+      <div class="expand-body">
+        Test at the boundaries of valid ranges: minimum values, maximum values, off-by-one, empty inputs, full buffers. In embedded: test with zero sensors, one sensor, maximum sensors. Test with empty buffers, full buffers, overflow conditions.
+      </div>
+    </div>
+    <div class="expandable" onclick="toggleExpand(this)">
+      <div class="expand-header">
+        <span><strong>Error Path Tests</strong> — What happens when things go wrong?</span>
+        <span class="expand-arrow">&#9660;</span>
+      </div>
+      <div class="expand-body">
+        Test error handling: what happens when a function receives invalid parameters, when a resource is unavailable, when a timeout occurs. Error paths are often untested because they're harder to trigger — but they're where bugs hide.
+      </div>
+    </div>
+    <div class="expandable" onclick="toggleExpand(this)">
+      <div class="expand-header">
+        <span><strong>Performance Tests</strong> — Does it meet timing constraints?</span>
+        <span class="expand-arrow">&#9660;</span>
+      </div>
+      <div class="expand-body">
+        In embedded, correctness isn't enough — the code must also meet timing constraints. Measure worst-case execution time, average latency, throughput. Compare against the spec's timing requirements. Use profiling tools or instrumented builds.
+      </div>
+    </div>
+    <div class="expandable" onclick="toggleExpand(this)">
+      <div class="expand-header">
+        <span><strong>Resource Tests</strong> — Does it fit in the budget?</span>
+        <span class="expand-arrow">&#9660;</span>
+      </div>
+      <div class="expand-body">
+        Embedded systems have fixed memory budgets. Test stack usage, heap allocation, static memory usage. Verify the code fits within the target's memory map. Resource overruns cause hard-to-debug crashes in the field.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 2: Mocks & Stubs -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Mocks &amp; Stubs</div>
+  <div class="section-sub">Isolate components for testing — remove hardware dependencies</div>
+
+  <div class="highlight-box orange" style="margin-bottom: 20px;">
+    <strong>The embedded testing challenge:</strong> You can't test hardware-dependent code on your laptop. Mocks and stubs replace hardware dependencies with可控 substitutes, enabling unit testing without the target device.
+  </div>
+
+  <!-- Three types -->
+  <div class="grid-3" style="margin-bottom: 20px;">
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">S</div>
+        <div class="card-title">Stubs</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Return fixed values. simplest form of test double. Replace a dependency with a function that returns a predetermined value.</div>
+      <div class="code-block"><span class="comment">// Stub: always returns 42</span>
+<span class="type">int</span> <span class="func">adc_read</span>(<span class="type">uint8_t</span> ch) {
+  <span class="keyword">return</span> <span class="num">42</span>;
+}</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--accent);">
+      <div class="card-header">
+        <div class="card-icon" style="background: #eff6ff; color: var(--accent);">F</div>
+        <div class="card-title">Fakes</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Working implementations simplified for testing. More realistic than stubs — maintain state but without hardware/OS dependencies.</div>
+      <div class="code-block"><span class="comment">// Fake: in-memory FIFO</span>
+<span class="keyword">typedef struct</span> {
+  <span class="type">uint8_t</span> buf[<span class="num">256</span>];
+  <span class="type">size_t</span> head, tail;
+} <span class="type">fake_fifo_t</span>;</div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">M</div>
+        <div class="card-title">Mocks</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Verify interactions. Record calls, check parameters, enforce call order. Most powerful but most complex test double.</div>
+      <div class="code-block"><span class="comment">// Mock: verify call + args</span>
+<span class="func">EXPECT_CALL</span>(mock, <span class="func">send</span>(<span class="num">0x05</span>))
+  .<span class="func">Times</span>(<span class="num">1</span>);
+<span class="func">EXPECT_CALL</span>(mock, <span class="func">receive</span>())
+  .<span class="func">WillOnce</span>(<span class="func">Return</span>(<span class="num">0x0A</span>));</div>
+    </div>
+  </div>
+
+  <!-- When to use each -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128269;</div>
+      <div class="card-title">When to Use Each</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Test Double</th><th>Use When</th><th>Complexity</th><th>Best For</th></tr>
+      <tr>
+        <td><strong>Stub</strong></td>
+        <td>You need a fixed return value</td>
+        <td><span class="badge badge-green">Low</span></td>
+        <td>Simple input/output tests</td>
+      </tr>
+      <tr>
+        <td><strong>Fake</strong></td>
+        <td>You need realistic behavior without hardware</td>
+        <td><span class="badge badge-orange">Medium</span></td>
+        <td>Data structures, protocols, state machines</td>
+      </tr>
+      <tr>
+        <td><strong>Mock</strong></td>
+        <td>You need to verify how code interacts with dependencies</td>
+        <td><span class="badge badge-red">High</span></td>
+        <td>API contracts, call sequences, error propagation</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Embedded examples -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#128295;</div>
+      <div class="card-title">Common Embedded Mocks</div>
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>HAL Mocks</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Replace hardware abstraction layer calls: GPIO read/write, UART send/receive, timer operations. Enable testing application logic without hardware. Example: mock <code>gpio_read()</code> to return controlled values.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Communication Mocks</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Replace SPI, I2C, UART, CAN interactions. Return controlled responses, inject errors, simulate timeouts. Enable testing protocol handlers without real buses.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>Timer Mocks</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Replace hardware timers with controllable time sources. Advance time artificially, trigger callbacks at specific moments, test timeout handling without real delays.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>RTOS Mocks</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Replace RTOS primitives: mutex, semaphore, queue operations. Test thread-safe code without a real RTOS. Verify correct use of synchronization primitives.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 3: Regression -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Regression Testing</div>
+  <div class="section-sub">Ensure changes don't break what already works</div>
+
+  <div class="highlight-box purple" style="margin-bottom: 20px;">
+    <strong>Regression = safety net.</strong> Every time you change code, you risk breaking something that was working. Regression testing is the process of verifying that existing behavior is preserved after changes.
+  </div>
+
+  <!-- Regression strategy -->
+  <div class="section-heading" style="font-size: 15px;">Regression Strategy</div>
+  <div class="section-sub">Three layers of regression protection</div>
+
+  <div class="grid-3" style="margin-bottom: 20px;">
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">1</div>
+        <div class="card-title">Smoke Tests</div>
+      </div>
+      <div class="card-desc">Quick sanity checks. Does the system boot? Do core functions work? Run on every commit. Takes seconds, catches showstoppers.</div>
+      <div class="pill-list">
+        <span class="pill">~30 seconds</span>
+        <span class="pill">Every commit</span>
+      </div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--accent);">
+      <div class="card-header">
+        <div class="card-icon" style="background: #eff6ff; color: var(--accent);">2</div>
+        <div class="card-title">Regression Suite</div>
+      </div>
+      <div class="card-desc">Full test suite from all previous passes. Every test that ever caught a bug stays in the suite forever. Runs on every PR.</div>
+      <div class="pill-list">
+        <span class="pill">~5-15 minutes</span>
+        <span class="pill">Every PR</span>
+      </div>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">3</div>
+        <div class="card-title">Full Validation</div>
+      </div>
+      <div class="card-desc">Complete regression + performance + resource tests. Runs before major releases or when timing/memory-sensitive changes are made.</div>
+      <div class="pill-list">
+        <span class="pill">~30-60 minutes</span>
+        <span class="pill">Pre-release</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Regression workflow -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#128260;</div>
+      <div class="card-title">Regression Test Workflow</div>
+    </div>
+    <div class="timeline" style="margin-top: 12px;">
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">Baseline: All tests green</div>
+        <div class="timeline-item-desc">Before any change, verify the full test suite passes. If tests are already failing, fix them first.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">Make your change</div>
+        <div class="timeline-item-desc">Implement the change per your plan. One logical change at a time.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">Run regression suite</div>
+        <div class="timeline-item-desc">All existing tests must still pass. If any fail, revert and diagnose before proceeding.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">Add new tests</div>
+        <div class="timeline-item-desc">Write tests for the new behavior. Run full suite including new tests.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">Commit with confidence</div>
+        <div class="timeline-item-desc">Full suite green, new tests green. Document what was verified.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Regression anti-patterns -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+      <div class="card-title">Regression Anti-Patterns</div>
+    </div>
+    <div class="grid-2" style="margin-top: 12px;">
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>The Flaky Test</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Tests that sometimes pass, sometimes fail — for no clear reason. Fix immediately. Flaky tests destroy confidence in the test suite. Common causes: timing dependencies, shared state, hardware races.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>The Silent Deletion</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Deleting a test because it fails instead of fixing the code. Never delete a failing test without understanding why it fails. A failing test is telling you something important.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>The Stale Test</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Tests that pass but no longer test the right thing. When requirements change, tests must change too. Review tests when you update specs — stale tests give false confidence.
+        </div>
+      </div>
+      <div class="expandable" onclick="toggleExpand(this)">
+        <div class="expand-header">
+          <span><strong>The Integration-Only</strong></span>
+          <span class="expand-arrow">&#9660;</span>
+        </div>
+        <div class="expand-body">
+          Only running integration/E2E tests, skipping unit tests. Integration tests are slow and hard to debug. Unit tests are fast and pinpoint issues. You need both.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 4: AI-Assisted -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">AI-Assisted Testing</div>
+  <div class="section-sub">Use Copilot to generate, improve, and analyze tests</div>
+
+  <div class="highlight-box green" style="margin-bottom: 20px;">
+    <strong>AI's sweet spot:</strong> Test generation is one of the highest-value uses of AI in embedded development. Tests are repetitive, pattern-based, and follow predictable structures — exactly what AI excels at. But always verify the generated tests.
+  </div>
+
+  <!-- AI testing workflow -->
+  <div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+      <div class="card-icon" style="background: #eff6ff; color: var(--accent);">&#129302;</div>
+      <div class="card-title">AI-Assisted Testing Workflow</div>
+    </div>
+    <div class="timeline" style="margin-top: 12px;">
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">1. Provide context</div>
+        <div class="timeline-item-desc">Give Copilot the spec, function signature, and edge cases. More context = better tests.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--accent);"></div>
+        <div class="timeline-item-title">2. Generate test skeleton</div>
+        <div class="timeline-item-desc">Ask Copilot to generate test cases from the spec's acceptance criteria. Review the structure.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--orange);"></div>
+        <div class="timeline-item-title">3. Review and correct</div>
+        <div class="timeline-item-desc">Verify tests are correct: do they test the right thing? Are edge cases covered? Is the assertion correct?</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background: var(--green);"></div>
+        <div class="timeline-item-title">4. Run and verify</div>
+        <div class="timeline-item-desc">Run the tests. All should pass. If a test fails, diagnose: is the test wrong or the code?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- What AI can and can't do -->
+  <div class="grid-2" style="margin-bottom: 20px;">
+    <div class="card" style="border-left: 4px solid var(--green);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--green-bg); color: var(--green);">&#10003;</div>
+        <div class="card-title">AI Excels At</div>
+      </div>
+      <div class="card-desc">
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.8;">
+          <li>Generating test cases from function signatures</li>
+          <li>Creating boundary tests (min, max, empty, null)</li>
+          <li>Writing error-path tests</li>
+          <li>Suggesting edge cases you might miss</li>
+          <li>Generating test data and fixtures</li>
+          <li>Writing test descriptions and documentation</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--red);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#9888;</div>
+        <div class="card-title">Verify Manually</div>
+      </div>
+      <div class="card-desc">
+        <ul style="margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.8;">
+          <li>Domain-specific test scenarios</li>
+          <li>Hardware-dependent behavior</li>
+          <li>Timing and performance assertions</li>
+          <li>Interrupt safety and concurrency</li>
+          <li>Memory layout and resource constraints</li>
+          <li>Correct mock/stub behavior</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt patterns -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128172;</div>
+      <div class="card-title">Effective Test Generation Prompts</div>
+    </div>
+    <div class="code-block"><span class="comment">// Prompt 1: Generate unit tests from function signature</span>
+<span class="string">"Write unit tests for this function. Include: valid inputs,
+ invalid inputs, boundary values, and error paths.
+ Use Unity test framework."</span>
+
+<span class="comment">// Prompt 2: Generate from spec acceptance criteria</span>
+<span class="string">"Here is the acceptance criteria for SENSOR-142.
+ Write a test for each criterion. Show expected input,
+ expected output, and assertion."</span>
+
+<span class="comment">// Prompt 3: Generate boundary tests</span>
+<span class="string">"Generate boundary tests for sensor_poll_all():
+ - Zero sensors
+ - One sensor
+ - Max sensors (SENSOR_MAX)
+ - Buffer exactly the right size
+ - Buffer one byte too small"</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 5: Embedded Challenges -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Embedded Testing Challenges</div>
+  <div class="section-sub">Unique constraints that make embedded testing harder</div>
+
+  <div class="highlight-box orange" style="margin-bottom: 20px;">
+    <strong>Why embedded testing is different:</strong> You can't just <code>npm test</code> and walk away. Embedded systems have hardware dependencies, real-time constraints, fixed memory budgets, and safety requirements that don't exist in application software.
+  </div>
+
+  <!-- Challenge cards -->
+  <div class="grid-2" style="margin-bottom: 20px;">
+    <div class="card" style="border-left: 4px solid var(--red);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--red-bg); color: var(--red);">&#128268;</div>
+        <div class="card-title">Hardware Dependencies</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Code that interacts with hardware can't run on a development machine. Solution: mock the HAL layer, test logic separately from hardware.</div>
+      <div class="highlight-box red" style="margin: 0; padding: 10px 12px; font-size: 12px;">
+        <strong>Strategy:</strong> Abstract hardware behind HAL interfaces. Mock HAL for unit tests. Test on real hardware only for integration/E2E.
+      </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--orange);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--orange-bg); color: var(--orange);">&#9201;</div>
+        <div class="card-title">Real-Time Constraints</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Tests must complete within timing budgets. A test that takes 10 seconds to run can't be in the commit-stage pipeline. Solution: tiered test execution.</div>
+      <div class="highlight-box orange" style="margin: 0; padding: 10px 12px; font-size: 12px;">
+        <strong>Strategy:</strong> Fast unit tests for commit stage. Slower integration for PR stage. Full validation for release stage.
+      </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--purple);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--purple-bg); color: var(--purple);">&#128190;</div>
+        <div class="card-title">Fixed Memory Budget</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Can't just allocate more memory if tests need it. Test code must fit alongside application code. Solution: test on host with generous memory, on-target with budget checks.</div>
+      <div class="highlight-box purple" style="margin: 0; padding: 10px 12px; font-size: 12px;">
+        <strong>Strategy:</strong> Host tests for logic, on-target for resource verification. Track test code size impact.
+      </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--teal);">
+      <div class="card-header">
+        <div class="card-icon" style="background: var(--teal-bg); color: var(--teal);">&#9888;</div>
+        <div class="card-title">Interrupt Safety</div>
+      </div>
+      <div class="card-desc" style="margin-bottom: 8px;">Code running in interrupt context has different constraints. Tests must verify: no blocking, no allocation, no non-atomic shared access. Solution: dedicated interrupt-context tests.</div>
+      <div class="highlight-box teal" style="margin: 0; padding: 10px 12px; font-size: 12px;">
+        <strong>Strategy:</strong> Static analysis for ISR rules. Unit tests with simulated interrupt preemption. Integration tests with real interrupts.
+      </div>
+    </div>
+  </div>
+
+  <!-- Testing approaches -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background: var(--cyan-bg); color: var(--cyan);">&#128736;</div>
+      <div class="card-title">Testing Approaches for Embedded</div>
+    </div>
+    <table class="compare-table" style="margin: 12px 0 0 0;">
+      <tr><th>Approach</th><th>Environment</th><th>Speed</th><th>Coverage</th><th>When to Use</th></tr>
+      <tr>
+        <td><strong>Host Unit Tests</strong></td>
+        <td>Development machine</td>
+        <td><span class="badge badge-green">Fast</span></td>
+        <td>Logic, algorithms, state machines</td>
+        <td>Every commit — most tests live here</td>
+      </tr>
+      <tr>
+        <td><strong>SIL (Software-in-the-Loop)</strong></td>
+        <td>Simulated target</td>
+        <td><span class="badge badge-orange">Medium</span></td>
+        <td>Full system without hardware</td>
+        <td>Integration tests, protocol validation</td>
+      </tr>
+      <tr>
+        <td><strong>PIL (Processor-in-the-Loop)</strong></td>
+        <td>Real processor, simulated I/O</td>
+        <td><span class="badge badge-orange">Medium</span></td>
+        <td>Timing, processor-specific behavior</td>
+        <td>Performance tests, timing validation</td>
+      </tr>
+      <tr>
+        <td><strong>HIL (Hardware-in-the-Loop)</strong></td>
+        <td>Real hardware</td>
+        <td><span class="badge badge-red">Slow</span></td>
+        <td>Complete system verification</td>
+        <td>Pre-release, safety-critical validation</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- TAB 6: Self-Check Quiz -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="tab-content">
+  <div class="section-heading">Self-Check Quiz</div>
+  <div class="section-sub">Verify your understanding of Module 06 key concepts</div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q1.</span> What percentage of the cohort have little more than compile-check pipeline maturity?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">A</span>
+        <span>21%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 1)">
+        <span class="opt-letter">B</span>
+        <span>42%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">C</span>
+        <span>53%</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 1)">
+        <span class="opt-letter">D</span>
+        <span>68%</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-1">
+      <strong>Correct!</strong> 42% of the cohort have little more than compile-check pipeline maturity. This is the single most significant readiness gap — and why Module 06 is positioned as the highest-value module for risk reduction. Only 21% have mature automated validation.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q2.</span> Which test double provides a working implementation simplified for testing?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">A</span>
+        <span>Stub</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 2)">
+        <span class="opt-letter">B</span>
+        <span>Fake</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">C</span>
+        <span>Mock</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 2)">
+        <span class="opt-letter">D</span>
+        <span>Spy</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-2">
+      <strong>Correct!</strong> A Fake is a working implementation simplified for testing — it maintains state but without hardware/OS dependencies. Stubs return fixed values. Mocks verify interactions. Fakes sit in between: realistic behavior without real dependencies.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q3.</span> What is the first step in the regression test workflow?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, true, 3)">
+        <span class="opt-letter">A</span>
+        <span>Run the full test suite to establish a green baseline</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">B</span>
+        <span>Write new tests for the change</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">C</span>
+        <span>Make the change</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 3)">
+        <span class="opt-letter">D</span>
+        <span>Commit the code</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-3">
+      <strong>Correct!</strong> Before any change, you must establish a green baseline — verify all existing tests pass. If tests are already failing, fix them first. You can't verify your change didn't break anything if things were already broken.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q4.</span> Why is hardware abstraction critical for embedded testability?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">A</span>
+        <span>It makes the code run faster</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, true, 4)">
+        <span class="opt-letter">B</span>
+        <span>It enables unit testing on host machines by mocking hardware dependencies</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">C</span>
+        <span>It reduces code size</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 4)">
+        <span class="opt-letter">D</span>
+        <span>It eliminates the need for integration tests</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-4">
+      <strong>Correct!</strong> Hardware abstraction layer (HAL) interfaces allow you to replace hardware-dependent calls with mocks during testing. This enables running unit tests on your development machine without the target hardware — fast, deterministic, and no special equipment needed.
+    </div>
+  </div>
+
+  <div class="quiz-question">
+    <h3><span class="q-num">Q5.</span> In the embedded test pyramid, which level should have the most tests?</h3>
+    <div class="quiz-options">
+      <div class="quiz-option" onclick="checkQuiz(this, true, 5)">
+        <span class="opt-letter">A</span>
+        <span>Unit tests (foundation)</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">B</span>
+        <span>Integration tests</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">C</span>
+        <span>E2E / system tests</span>
+      </div>
+      <div class="quiz-option" onclick="checkQuiz(this, false, 5)">
+        <span class="opt-letter">D</span>
+        <span>All levels should have equal tests</span>
+      </div>
+    </div>
+    <div class="quiz-explanation" id="explanation-5">
+      <strong>Correct!</strong> The test pyramid has unit tests as the wide foundation — they're fast, cheap, deterministic, and AI-generatable. Most tests should be unit tests. Integration tests are fewer (medium), E2E tests are fewest (expensive, slow, may need hardware). More tests at the base = faster feedback, lower cost.
+    </div>
+  </div>
+
+  <div class="highlight-box purple" style="margin-top: 20px;">
+    <strong>Module 06 Complete.</strong> You now have a complete testing discipline: strategy (what/when/how), technique (mocks/stubs/fakes), regression protection (smoke/regression/validation), and AI assistance (generate/review/verify). Next: <strong>Module 07 — Extend with MCP</strong> (tool integration, reusable skills).
+  </div>
+</div>
+
+<script>
+function showTab(index) {
+  document.querySelectorAll('.tab-content').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+  document.querySelectorAll('.tab-bar button').forEach((b, i) => {
+    b.classList.toggle('active', i === index);
+  });
+}
+
+function showPyramidDetail(index) {
+  document.querySelectorAll('[id^="pyramid-detail-"]').forEach((el, i) => {
+    el.style.display = i === index ? 'block' : 'none';
+  });
+}
+
+function toggleExpand(el) {
+  el.classList.toggle('open');
+}
+
+function checkQuiz(option, isCorrect, qNum) {
+  const question = option.closest('.quiz-question');
+  if (question.dataset.answered) return;
+  question.dataset.answered = 'true';
+
+  const options = question.querySelectorAll('.quiz-option');
+  options.forEach(o => { o.style.pointerEvents = 'none'; });
+
+  if (isCorrect) {
+    option.classList.add('correct');
+  } else {
+    option.classList.add('incorrect');
+    options.forEach(o => {
+      if (o !== option) {
+        const onclick = o.getAttribute('onclick');
+        if (onclick && onclick.includes('true')) {
+          o.classList.add('correct');
+        }
+      }
+    });
+  }
+
+  const explanation = document.getElementById('explanation-' + qNum);
+  if (explanation) explanation.classList.add('show');
+}
+</script>
+
+</body>
+</html>

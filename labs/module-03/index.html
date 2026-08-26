@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 03 — Prompt Engineering &amp; Context Engineering</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0d1b2a;--blue:#1b2a4a;--accent:#2196f3;--accent2:#00bcd4;
+  --green:#4caf50;--red:#f44336;--orange:#ff9800;--purple:#9c27b0;--teal:#009688;
+  --bg:#f5f7fa;--card:#fff;--text:#1a1a2e;--muted:#6b7280;
+  --border:#e2e8f0;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.08);
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+
+/* Header */
+.header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:32px 40px;text-align:center}
+.header h1{font-size:1.8rem;margin-bottom:6px;font-weight:700}
+.header p{opacity:.85;font-size:.95rem;max-width:720px;margin:0 auto}
+.header .badge{display:inline-block;background:var(--accent);color:#fff;font-size:.7rem;padding:3px 10px;border-radius:20px;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+
+/* Tab Bar */
+.tab-bar{display:flex;gap:0;background:var(--navy);overflow-x:auto;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.tab-btn{flex:0 0 auto;padding:14px 20px;background:transparent;border:none;color:rgba(255,255,255,.6);font-size:.82rem;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap;border-bottom:3px solid transparent;font-family:inherit}
+.tab-btn:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.05)}
+.tab-btn.active{color:#fff;border-bottom-color:var(--accent);background:rgba(255,255,255,.08)}
+
+/* Tab Content */
+.tab-content{display:none;padding:32px 40px 60px;max-width:1100px;margin:0 auto;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Section Titles */
+.section-title{font-size:1.5rem;font-weight:700;margin-bottom:8px;color:var(--navy)}
+.section-sub{color:var(--muted);margin-bottom:24px;font-size:.95rem}
+
+/* Cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:28px}
+.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);transition:.25s;cursor:pointer;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.card .icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px;color:#fff;font-weight:700}
+.card h3{font-size:1.05rem;margin-bottom:8px}
+.card p{color:var(--muted);font-size:.88rem}
+.card-detail{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s ease;opacity:0;margin-top:0}
+.card.expanded .card-detail{max-height:800px;opacity:1;margin-top:16px}
+.card-detail-inner{background:var(--bg);border-radius:8px;padding:16px;font-size:.85rem;line-height:1.7}
+.card-detail-inner ul{margin:8px 0 8px 18px}
+.card-detail-inner li{margin-bottom:4px}
+.card .expand-hint{position:absolute;top:14px;right:14px;font-size:.7rem;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:10px;transition:.2s}
+.card.expanded .expand-hint{display:none}
+
+/* Tables */
+.cmp-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.88rem}
+.cmp-table th{background:var(--navy);color:#fff;padding:12px 16px;text-align:left;font-weight:600}
+.cmp-table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+.cmp-table tr:hover td{background:rgba(33,150,243,.04)}
+
+/* Pyramid */
+.pyramid{display:flex;flex-direction:column;align-items:center;gap:0;margin:24px 0}
+.pyramid-level{border-radius:var(--radius);padding:14px 20px;text-align:center;cursor:pointer;transition:.3s;border:2px solid transparent;position:relative}
+.pyramid-level:hover{transform:scale(1.04);z-index:2}
+.pyramid-level h4{font-size:.95rem;margin-bottom:2px}
+.pyramid-level small{font-size:.78rem;opacity:.8}
+.pyramid-level .pyramid-detail{display:none;margin-top:10px;text-align:left;background:rgba(255,255,255,.9);border-radius:8px;padding:12px;font-size:.82rem;color:var(--text)}
+.pyramid-level.active .pyramid-detail{display:block}
+.p1{width:50%;background:linear-gradient(135deg,#e53935,#c62828);color:#fff}
+.p2{width:58%;background:linear-gradient(135deg,#ff9800,#f57c00);color:#fff}
+.p3{width:66%;background:linear-gradient(135deg,#fdd835,#f9a825);color:#1a1a2e}
+.p4{width:74%;background:linear-gradient(135deg,#66bb6a,#43a047);color:#fff}
+.p5{width:82%;background:linear-gradient(135deg,#42a5f5,#1e88e5);color:#fff}
+.p6{width:90%;background:linear-gradient(135deg,#7e57c2,#5e35b1);color:#fff}
+.p7{width:98%;background:linear-gradient(135deg,#26c6da,#00acc1);color:#fff}
+
+/* Flow */
+.flow{display:flex;align-items:center;justify-content:center;gap:0;margin:24px 0;flex-wrap:wrap}
+.flow-step{background:var(--card);border-radius:var(--radius);padding:18px 22px;text-align:center;box-shadow:var(--shadow);border:2px solid var(--border);min-width:160px;transition:.25s;cursor:pointer}
+.flow-step:hover{border-color:var(--accent);transform:translateY(-2px)}
+.flow-step .step-num{width:32px;height:32px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;margin:0 auto 10px}
+.flow-step h4{font-size:.92rem;margin-bottom:4px}
+.flow-step p{font-size:.78rem;color:var(--muted)}
+.flow-arrow{font-size:1.6rem;color:var(--accent);margin:0 8px;flex-shrink:0}
+
+/* Layer Diagram */
+.layer-stack{display:flex;flex-direction:column;align-items:center;gap:0;margin:24px 0}
+.layer{width:90%;max-width:600px;border-radius:var(--radius);padding:16px 24px;text-align:center;cursor:pointer;transition:.3s;border:2px solid transparent}
+.layer:hover{transform:scale(1.03);z-index:2}
+.layer h4{font-size:.95rem;margin-bottom:4px}
+.layer p{font-size:.8rem;opacity:.85}
+.layer .layer-detail{display:none;margin-top:10px;text-align:left;background:rgba(255,255,255,.9);border-radius:8px;padding:12px;font-size:.82rem;color:var(--text)}
+.layer.active .layer-detail{display:block}
+.l1{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff}
+.l2{background:linear-gradient(135deg,#2e7d32,#1b5e20);color:#fff}
+.l3{background:linear-gradient(135deg,#ff8f00,#ff6f00);color:#fff}
+.l4{background:linear-gradient(135deg,#6a1b9a,#4a148c);color:#fff}
+.l5{background:linear-gradient(135deg,#c62828,#b71c1c);color:#fff}
+
+/* Token Budget Bar */
+.budget-bar{display:flex;border-radius:var(--radius);overflow:hidden;height:48px;margin:16px 0;box-shadow:var(--shadow)}
+.budget-seg{display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;transition:flex .5s ease;cursor:pointer;position:relative}
+.budget-seg:hover{filter:brightness(1.1)}
+.budget-seg .budget-tip{position:absolute;bottom:56px;background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px;font-size:.8rem;white-space:nowrap;display:none;z-index:10;pointer-events:none}
+.budget-seg:hover .budget-tip{display:block}
+.b-task{background:#e53935;flex:1}
+.b-primary{background:#42a5f5;flex:4}
+.b-secondary{background:#66bb6a;flex:2.5}
+.b-tertiary{background:#ff9800;flex:1.5}
+.b-response{background:#7e57c2;flex:1}
+
+/* Compare Panels */
+.compare-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+.compare-panel{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border-top:4px solid}
+.compare-panel.old{border-top-color:var(--muted)}
+.compare-panel.new{border-top-color:var(--green)}
+.compare-panel h3{font-size:1rem;margin-bottom:12px}
+.compare-panel ul{margin:0 0 0 18px;font-size:.85rem}
+.compare-panel li{margin-bottom:6px}
+
+/* Compression Visual */
+.compress-visual{display:flex;gap:16px;margin:20px 0;flex-wrap:wrap}
+.compress-bar{flex:1;min-width:200px;background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid}
+.compress-bar h4{font-size:.95rem;margin-bottom:10px}
+.compress-bar .bar-fill{height:24px;border-radius:12px;display:flex;align-items:center;padding:0 12px;color:#fff;font-size:.75rem;font-weight:700;transition:width .8s ease}
+.compress-full{border-left-color:var(--red)}
+.compress-full .bar-fill{background:var(--red);width:100%}
+.compress-mid{border-left-color:var(--orange)}
+.compress-mid .bar-fill{background:var(--orange);width:50%}
+.compress-low{border-left-color:var(--green)}
+.compress-low .bar-fill{background:var(--green);width:20%}
+
+/* Pattern Cards */
+.pattern-card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:20px}
+.pattern-card h3{font-size:1.05rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pattern-card .pattern-tag{font-size:.7rem;padding:3px 10px;border-radius:12px;font-weight:600}
+.pattern-steps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pattern-step{background:var(--bg);border-radius:8px;padding:12px 16px;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+.pattern-step .step-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;color:#fff}
+
+/* Stat Callout */
+.stat-callout{display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}
+.stat-box{background:var(--card);border-radius:var(--radius);padding:18px 22px;box-shadow:var(--shadow);text-align:center;flex:1;min-width:140px}
+.stat-box .stat-num{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.stat-box .stat-label{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+/* Quiz */
+.quiz-container{max-width:720px;margin:0 auto}
+.quiz-question{background:var(--card);border-radius:var(--radius);padding:24px 28px;margin-bottom:24px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.quiz-question .q-num{display:inline-block;background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;text-align:center;line-height:28px;font-weight:700;font-size:.8rem;margin-right:8px}
+.quiz-question .q-text{font-weight:600;font-size:1rem;margin-bottom:16px;display:inline}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{background:var(--bg);border:2px solid var(--border);border-radius:8px;padding:12px 16px;cursor:pointer;font-size:.9rem;transition:.2s;display:flex;align-items:center;gap:10px}
+.quiz-opt:hover{border-color:var(--accent);background:rgba(33,150,243,.04)}
+.quiz-opt .opt-letter{width:28px;height:28px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;transition:.2s}
+.quiz-opt:hover .opt-letter{background:var(--accent);color:#fff}
+.quiz-opt.correct{border-color:var(--green);background:#e8f5e9}
+.quiz-opt.correct .opt-letter{background:var(--green);color:#fff}
+.quiz-opt.wrong{border-color:var(--red);background:#ffebee}
+.quiz-opt.wrong .opt-letter{background:var(--red);color:#fff}
+.quiz-opt.disabled{pointer-events:none;opacity:.85}
+.quiz-feedback{margin-top:12px;padding:12px 16px;border-radius:8px;font-size:.85rem;display:none;line-height:1.6}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct-fb{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+.quiz-feedback.wrong-fb{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c}
+.quiz-progress{background:var(--card);border-radius:var(--radius);padding:16px 24px;margin-bottom:28px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.quiz-progress .progress-bar{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.quiz-progress .progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
+.quiz-progress .progress-text{font-size:.85rem;color:var(--muted);font-weight:600;white-space:nowrap}
+
+/* Tooltip */
+.tooltip-box{background:var(--navy);color:#fff;padding:14px 18px;border-radius:8px;font-size:.84rem;line-height:1.6;margin-top:16px;display:none;animation:fadeIn .2s}
+.tooltip-box.show{display:block}
+
+/* Context Types Grid */
+.ctx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin:20px 0}
+.ctx-item{background:var(--card);border-radius:8px;padding:14px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);cursor:pointer;transition:.2s}
+.ctx-item:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ctx-item .ctx-icon{font-size:1.6rem;margin-bottom:6px}
+.ctx-item h5{font-size:.85rem;margin-bottom:2px}
+.ctx-item p{font-size:.72rem;color:var(--muted)}
+
+/* Warning */
+.warning-banner{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid var(--orange);border-radius:var(--radius);padding:18px 24px;margin:24px 0;display:flex;gap:14px;align-items:flex-start}
+.warning-banner .warn-icon{font-size:1.8rem;flex-shrink:0}
+.warning-banner .warn-text h4{color:#e65100;margin-bottom:4px}
+.warning-banner .warn-text p{font-size:.85rem;color:#bf360c}
+
+/* Best practice list */
+.bp-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.bp-item{display:flex;gap:10px;align-items:flex-start;font-size:.88rem}
+.bp-item .bp-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;color:#fff}
+.bp-item.bp-bad .bp-icon{background:var(--red)}
+.bp-item.bp-good .bp-icon{background:var(--green)}
+
+@media(max-width:768px){
+  .tab-btn{padding:10px 14px;font-size:.75rem}
+  .tab-content{padding:20px 16px 40px}
+  .compare-panels{grid-template-columns:1fr}
+  .flow{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg)}
+  .header h1{font-size:1.3rem}
+  .pyramid-level{width:100%!important}
+  .layer{width:100%!important}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge">AI Champions Programme</span>
+  <h1>Module 03 — Prompt Engineering &amp; Context Engineering</h1>
+  <p>Move from ad-hoc prompting to structured context engineering for embedded C/C++ repositories. Learn to scope, layer, compress, and inject context that produces better code with fewer tokens.</p>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="pyramid">Prompt Pyramid</button>
+  <button class="tab-btn" data-tab="context">Context Engineering</button>
+  <button class="tab-btn" data-tab="layers">Selection &amp; Layering</button>
+  <button class="tab-btn" data-tab="tokens">Token-Aware Practices</button>
+  <button class="tab-btn" data-tab="compress">Context Compression</button>
+  <button class="tab-btn" data-tab="patterns">Task-Scoped Patterns</button>
+  <button class="tab-btn" data-tab="quiz">Self-Check Quiz</button>
+</div>
+
+<!-- ===================== TAB 1: PROMPT PYRAMID ===================== -->
+<div class="tab-content active" id="tab-pyramid">
+  <h2 class="section-title">The Prompt Engineering Pyramid</h2>
+  <p class="section-sub">Click each level to see how it applies to embedded engineering. Build from the base (clear objective) upward to verified output.</p>
+
+  <div class="stat-callout">
+    <div class="stat-box"><div class="stat-num">53%</div><div class="stat-label">Use ad-hoc prompting</div></div>
+    <div class="stat-box"><div class="stat-num">6/10</div><div class="stat-label">Avg code quality (prompt-only)</div></div>
+    <div class="stat-box"><div class="stat-num">12K</div><div class="stat-label">Avg tokens per task (ad-hoc)</div></div>
+    <div class="stat-box"><div class="stat-num">5-7</div><div class="stat-label">Avg iterations to complete</div></div>
+  </div>
+
+  <div class="pyramid">
+    <div class="pyramid-level p1" onclick="togglePyramid(this)">
+      <h4>Verity (Verify)</h4>
+      <small>Check output against requirements</small>
+      <div class="pyramid-detail">
+        <strong>Embedded Verification:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li>Does compiled code match spec?</li>
+          <li>Memory usage within budget?</li>
+          <li>Timing constraints met?</li>
+          <li>Test coverage acceptable?</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pyramid-level p2" onclick="togglePyramid(this)">
+      <h4>Iteration (Refine)</h4>
+      <small>Iterate on output quality</small>
+      <div class="pyramid-detail">
+        <strong>Refinement Strategy:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li>Review generated code against patterns</li>
+          <li>Add missing error handling</li>
+          <li>Refine naming to match conventions</li>
+          <li>Ensure MISRA-C compliance</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pyramid-level p3" onclick="togglePyramid(this)">
+      <h4>Decomposition (Break Down)</h4>
+      <small>Split complex tasks into subtasks</small>
+      <div class="pyramid-detail">
+        <strong>Decomposition Example:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li>1. Generate HAL interface header</li>
+          <li>2. Implement driver functions</li>
+          <li>3. Add error handling</li>
+          <li>4. Write unit tests</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pyramid-level p4" onclick="togglePyramid(this)">
+      <h4>Examples (Show/Teach)</h4>
+      <small>Provide code examples for the model</small>
+      <div class="pyramid-detail">
+        <strong>Embedded Examples:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li>Similar driver implementations</li>
+          <li>Existing HAL usage patterns</li>
+          <li>Test file templates</li>
+          <li>Error handling conventions</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pyramid-level p5" onclick="togglePyramid(this)">
+      <h4>Constraints (Boundaries)</h4>
+      <small>Define limits and rules</small>
+      <div class="pyramid-detail">
+        <strong>Embedded Constraints:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li>No dynamic allocation</li>
+          <li>Must use HAL library</li>
+          <li>Max 1KB RAM usage</li>
+          <li>MISRA-C compliant</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pyramid-level p6" onclick="togglePyramid(this)">
+      <h4>Instructions (What to Do)</h4>
+      <small>Clear task specification</small>
+      <div class="pyramid-detail">
+        <strong>Effective Instructions:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li>"You are an embedded software engineer specializing in C/C++ firmware"</li>
+          <li>"Implement a circular buffer for UART receive"</li>
+          <li>"Follow these constraints..."</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pyramid-level p7" onclick="togglePyramid(this)">
+      <h4>Task Framing (Clear Objective)</h4>
+      <small>Define what success looks like</small>
+      <div class="pyramid-detail">
+        <strong>Task Framing Components:</strong>
+        <ul style="margin:6px 0 0 16px;font-size:.82rem">
+          <li><strong>Objective:</strong> What to implement</li>
+          <li><strong>Scope:</strong> Boundaries (e.g., "Only TX/RX, no flow control")</li>
+          <li><strong>Constraints:</strong> Limits (e.g., "Must use HAL library, &lt; 1KB RAM")</li>
+          <li><strong>Output:</strong> Expected result (e.g., "C source + header + unit tests")</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Embedded-Specific Prompt Patterns</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Pattern</th><th>Use Case</th><th>Example Prompt</th></tr></thead>
+    <tbody>
+      <tr><td><strong>HAL-Aware</strong></td><td>Driver generation</td><td>"Generate SPI driver using STM32 HAL"</td></tr>
+      <tr><td><strong>State-Machine</strong></td><td>Protocol implementation</td><td>"Implement Modbus state machine"</td></tr>
+      <tr><td><strong>ISR-Safe</strong></td><td>Interrupt handlers</td><td>"Create UART RX ISR with ring buffer"</td></tr>
+      <tr><td><strong>Timing-Conscious</strong></td><td>Real-time code</td><td>"Implement scheduler with 1ms tick"</td></tr>
+      <tr><td><strong>Memory-Constrained</strong></td><td>Resource-limited</td><td>"Optimize for 64KB Flash target"</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 2: CONTEXT ENGINEERING ===================== -->
+<div class="tab-content" id="tab-context">
+  <h2 class="section-title">Context Engineering vs Prompt Engineering</h2>
+  <p class="section-sub">Context engineering is the multiplier — it determines WHAT information you provide, not just how you ask.</p>
+
+  <div class="compare-panels">
+    <div class="compare-panel old">
+      <h3>&#x270D; Prompt Engineering</h3>
+      <ul>
+        <li>Focuses on <strong>HOW</strong> you ask</li>
+        <li>Instruction wording and structure</li>
+        <li>Task decomposition</li>
+        <li>Example selection</li>
+        <li>Iterative refinement</li>
+      </ul>
+    </div>
+    <div class="compare-panel new">
+      <h3>&#x1F4C1; Context Engineering</h3>
+      <ul>
+        <li>Focuses on <strong>WHAT</strong> information you provide</li>
+        <li>Repository content selection</li>
+        <li>Design document inclusion</li>
+        <li>Interface contract exposure</li>
+        <li>Token budget management</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);border-left:4px solid var(--green);margin:20px 0">
+    <strong style="color:var(--green)">&#x2728; Combined Effect:</strong>
+    <p style="font-size:.9rem;margin-top:6px">Clear instructions + Right context = Best output. Poor context limits even the best prompts. <strong>Context engineering is the multiplier.</strong></p>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Embedded Repository Context Types</h3>
+  <div class="ctx-grid">
+    <div class="ctx-item" onclick="showCtxTip(this,'Source files (.c, .cpp) contain the actual implementation logic. Include only files directly relevant to the task.')">
+      <div class="ctx-icon">&#x1F4C4;</div>
+      <h5>Source Files</h5>
+      <p>.c, .cpp implementations</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Header files (.h, .hpp) define API contracts, data types, and function prototypes. Critical for interface-aware code generation.')">
+      <div class="ctx-icon">&#x1F4DD;</div>
+      <h5>Headers</h5>
+      <p>.h, .hpp interfaces</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Build files (Makefile, CMakeLists.txt) define dependencies, toolchain, and compilation flags. Reference by path, not full content.')">
+      <div class="ctx-icon">&#x2699;</div>
+      <h5>Build Files</h5>
+      <p>Makefile, CMakeLists.txt</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Configuration files (.cfg, .json, .yaml) define runtime parameters. Include only relevant sections.')">
+      <div class="ctx-icon">&#x2699;</div>
+      <h5>Configuration</h5>
+      <p>.cfg, .json, .yaml</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Design docs describe architecture, module responsibilities, and design intent. Reference by path and extract key decisions.')">
+      <div class="ctx-icon">&#x1F4D6;</div>
+      <h5>Design Docs</h5>
+      <p>Architecture, diagrams</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Coding standards define naming conventions, formatting rules, and compliance requirements (e.g., MISRA-C). Always include relevant rules.')">
+      <div class="ctx-icon">&#x1F4CB;</div>
+      <h5>Coding Standards</h5>
+      <p>Style guides, rules</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Issue history provides context for why changes are being made. Include bug reports, feature requests, and recent change history.')">
+      <div class="ctx-icon">&#x1F4DD;</div>
+      <h5>Issue History</h5>
+      <p>Bug reports, features</p>
+    </div>
+    <div class="ctx-item" onclick="showCtxTip(this,'Test files show validation patterns, assertion styles, and test coverage expectations. Use as templates for new tests.')">
+      <div class="ctx-icon">&#x1F9EA;</div>
+      <h5>Tests</h5>
+      <p>Unit, integration</p>
+    </div>
+  </div>
+  <div id="ctxTip" class="tooltip-box"></div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">HAL Boundary Context</h3>
+  <div style="display:flex;flex-direction:column;gap:0;align-items:center;margin:20px 0">
+    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:var(--radius);padding:16px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#1565c0;margin-bottom:4px">Application Layer</h4>
+      <p style="font-size:.82rem;color:#1565c0">Business Logic · Feature Implementation · State Management · Data Processing</p>
+    </div>
+    <div style="font-size:1.4rem;color:var(--muted);margin:4px 0">▼</div>
+    <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:var(--radius);padding:16px 24px;width:90%;max-width:500px;text-align:center;border:2px dashed var(--orange)">
+      <h4 style="color:#e65100;margin-bottom:4px">HAL Interface (Critical Context)</h4>
+      <p style="font-size:.82rem;color:#e65100">GPIO_ReadPin() · UART_Send() · SPI_Transfer() · Timer_Start()</p>
+    </div>
+    <div style="font-size:1.4rem;color:var(--muted);margin:4px 0">▼</div>
+    <div style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);border-radius:var(--radius);padding:16px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#c2185b;margin-bottom:4px">Hardware Layer</h4>
+      <p style="font-size:.82rem;color:#c2185b">Peripheral Registers · Memory-mapped I/O · Interrupt Vectors · DMA Channels</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 3: SELECTION & LAYERING ===================== -->
+<div class="tab-content" id="tab-layers">
+  <h2 class="section-title">Context Selection and Layering</h2>
+  <p class="section-sub">Click each layer to see when to include it. Build context from core task files outward to supporting docs.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Context Selection Framework</h3>
+  <div class="flow" style="margin-bottom:32px">
+    <div class="flow-step">
+      <div class="step-num">1</div>
+      <h4>Task Analysis</h4>
+      <p>What files are relevant? What interfaces involved?</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="step-num">2</div>
+      <h4>Context Gathering</h4>
+      <p>Primary → Secondary → Tertiary files</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="step-num">3</div>
+      <h4>Token Budget</h4>
+      <p>Allocate 60% / 25% / 15%</p>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-step">
+      <div class="step-num">4</div>
+      <h4>Inject &amp; Execute</h4>
+      <p>Structure prompt with context</p>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Context Layering Strategy</h3>
+  <p style="font-size:.88rem;color:var(--muted);margin-bottom:16px">Click each layer to see details and when to include it.</p>
+
+  <div class="layer-stack">
+    <div class="layer l5" onclick="toggleLayer(this)">
+      <h4>Layer 5: History</h4>
+      <p>Issue context, past changes</p>
+      <div class="layer-detail">
+        <strong>When to include:</strong> When debugging regressions or understanding why a change was made.<br>
+        <strong>Content:</strong> Bug reports, recent commits, change rationale.<br>
+        <strong>Token cost:</strong> Low — reference issue numbers, not full history.
+      </div>
+    </div>
+    <div class="layer l4" onclick="toggleLayer(this)">
+      <h4>Layer 4: Standards</h4>
+      <p>Coding rules, style guides</p>
+      <div class="layer-detail">
+        <strong>When to include:</strong> Always — for compliance and consistency.<br>
+        <strong>Content:</strong> MISRA-C rules, naming conventions, formatting standards.<br>
+        <strong>Token cost:</strong> Medium — include relevant rules only, not full standard.
+      </div>
+    </div>
+    <div class="layer l3" onclick="toggleLayer(this)">
+      <h4>Layer 3: Design</h4>
+      <p>Architecture, diagrams</p>
+      <div class="layer-detail">
+        <strong>When to include:</strong> When changing structure or adding new modules.<br>
+        <strong>Content:</strong> Architecture docs, module responsibilities, design decisions.<br>
+        <strong>Token cost:</strong> Medium — extract key decisions, not full documents.
+      </div>
+    </div>
+    <div class="layer l2" onclick="toggleLayer(this)">
+      <h4>Layer 2: Interface</h4>
+      <p>HAL boundaries, contracts</p>
+      <div class="layer-detail">
+        <strong>When to include:</strong> When modifying interfaces or cross-module interactions.<br>
+        <strong>Content:</strong> Header files, API contracts, HAL function signatures.<br>
+        <strong>Token cost:</strong> High — include full interface definitions.
+      </div>
+    </div>
+    <div class="layer l1" onclick="toggleLayer(this)">
+      <h4>Layer 1: Core</h4>
+      <p>Task file + dependencies</p>
+      <div class="layer-detail">
+        <strong>When to include:</strong> Always — this is the foundation.<br>
+        <strong>Content:</strong> Direct task files, immediate dependencies, related source/headers.<br>
+        <strong>Token cost:</strong> Highest — allocate 60% of budget here.
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Context Boundary Patterns</h3>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="card" style="cursor:default;border-top:3px solid var(--accent)">
+      <h3>Function-Level</h3>
+      <p><strong>Input:</strong> Function signature + docstring</p>
+      <p><strong>Context:</strong> Implementation file + direct includes</p>
+      <p><strong>Output:</strong> Function body</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--green)">
+      <h3>Module-Level</h3>
+      <p><strong>Input:</strong> Module header + interface contracts</p>
+      <p><strong>Context:</strong> Related modules + HAL boundaries</p>
+      <p><strong>Output:</strong> Module implementation</p>
+    </div>
+    <div class="card" style="cursor:default;border-top:3px solid var(--purple)">
+      <h3>Feature-Level</h3>
+      <p><strong>Input:</strong> Feature spec + acceptance criteria</p>
+      <p><strong>Context:</strong> Affected modules + build config</p>
+      <p><strong>Output:</strong> Complete feature implementation</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 4: TOKEN-AWARE PRACTICES ===================== -->
+<div class="tab-content" id="tab-tokens">
+  <h2 class="section-title">Token-Aware Practices</h2>
+  <p class="section-sub">Manage your token budget wisely. Hover over each segment to see the breakdown.</p>
+
+  <h3 style="margin-bottom:12px;font-size:1.05rem">Token Budget Breakdown (Typical 8K Window)</h3>
+  <div class="budget-bar">
+    <div class="budget-seg b-task"><span>Task</span><div class="budget-tip"><strong>Task Description: 10%</strong><br>~800 tokens — Clear objective, constraints, expected output format</div></div>
+    <div class="budget-seg b-primary"><span>Primary Files</span><div class="budget-tip"><strong>Primary Files: 40%</strong><br>~3,200 tokens — Direct task files (source + headers)</div></div>
+    <div class="budget-seg b-secondary"><span>Secondary</span><div class="budget-tip"><strong>Supporting Files: 25%</strong><br>~2,000 tokens — Related interfaces, HAL boundaries</div></div>
+    <div class="budget-seg b-tertiary"><span>Docs</span><div class="budget-tip"><strong>Design/Standards: 15%</strong><br>~1,200 tokens — Architecture docs, coding rules</div></div>
+    <div class="budget-seg b-response"><span>Buffer</span><div class="budget-tip"><strong>Response Buffer: 10%</strong><br>~800 tokens — Reserved for model response</div></div>
+  </div>
+  <p style="font-size:.8rem;color:var(--muted);margin-top:8px">&#x1F4A1; Hover over each segment to see details. Total: ~8,000 tokens (typical context window)</p>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Token Optimization Strategies</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Strategy</th><th>Technique</th><th>Token Savings</th></tr></thead>
+    <tbody>
+      <tr><td><strong>File Selection</strong></td><td>Only include relevant files</td><td style="color:var(--green);font-weight:700">30-50%</td></tr>
+      <tr><td><strong>Code Summarization</strong></td><td>Summarize non-critical sections</td><td style="color:var(--green);font-weight:700">20-30%</td></tr>
+      <tr><td><strong>Interface Extraction</strong></td><td>Extract only API contracts</td><td style="color:var(--green);font-weight:700">40-60%</td></tr>
+      <tr><td><strong>Snippet Inclusion</strong></td><td>Include relevant snippets only</td><td style="color:var(--green);font-weight:700">50-70%</td></tr>
+      <tr><td><strong>Reference Links</strong></td><td>Link to docs instead of including</td><td style="color:var(--green);font-weight:700">60-80%</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Avoiding Context Inflation</h3>
+  <div class="compare-panels">
+    <div class="compare-panel old">
+      <h3>&#x274C; Anti-Patterns</h3>
+      <ul>
+        <li>Paste entire repository</li>
+        <li>Include all header files</li>
+        <li>Add unrelated test files</li>
+        <li>Include full build logs</li>
+        <li>Paste complete configuration files</li>
+      </ul>
+    </div>
+    <div class="compare-panel new">
+      <h3>&#x2705; Best Practices</h3>
+      <ul>
+        <li>Select specific files relevant to task</li>
+        <li>Include only affected interfaces</li>
+        <li>Reference design docs by path, not content</li>
+        <li>Summarize build configuration</li>
+        <li>Include only relevant code snippets</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB 5: CONTEXT COMPRESSION ===================== -->
+<div class="tab-content" id="tab-compress">
+  <h2 class="section-title">Context Compression Techniques</h2>
+  <p class="section-sub">Reduce token usage while preserving the information that matters. Click bars to see details.</p>
+
+  <h3 style="margin-bottom:16px;font-size:1.05rem">Source/Header Compression</h3>
+  <div class="compress-visual">
+    <div class="compress-bar compress-full" onclick="showCompressTip(this,'Full file: 500 lines of source code. Includes all implementation details, comments, and dead code. High token cost, often mostly irrelevant.')">
+      <h4>Full File</h4>
+      <div class="bar-fill">500 lines — 0% savings</div>
+    </div>
+    <div class="compress-bar compress-mid" onclick="showCompressTip(this,'Function signatures only: Extract just the function declarations and their parameter types. Captures the API without implementation details.')">
+      <h4>Signatures Only</h4>
+      <div class="bar-fill">50 lines — 90% savings</div>
+    </div>
+    <div class="compress-bar compress-low" onclick="showCompressTip(this,'Interface only: Extract just the header file with type definitions and function prototypes. Perfect for context-aware generation.')">
+      <h4>Interface Only</h4>
+      <div class="bar-fill">20 lines — 96% savings</div>
+    </div>
+  </div>
+  <div id="compressTip" class="tooltip-box"></div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Design Document Compression</h3>
+  <div style="display:flex;flex-direction:column;gap:0;align-items:center;margin:20px 0">
+    <div style="background:linear-gradient(135deg,#ffebee,#ffcdd2);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#c62828">Full Document</h4>
+      <p style="font-size:.82rem;color:#c62828">~10,000 tokens — Complete architecture doc with all diagrams</p>
+    </div>
+    <div style="font-size:1.4rem;color:var(--muted);margin:4px 0">▼</div>
+    <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#e65100">Compressed</h4>
+      <p style="font-size:.82rem;color:#e65100">~2,000 tokens — Key decisions, affected modules, relevant interfaces</p>
+    </div>
+    <div style="font-size:1.4rem;color:var(--muted);margin:4px 0">▼</div>
+    <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:var(--radius);padding:14px 24px;width:90%;max-width:500px;text-align:center">
+      <h4 style="color:#2e7d32">Minimal</h4>
+      <p style="font-size:.82rem;color:#2e7d32">~500 tokens — Module responsibility summary + key interfaces</p>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Build Configuration Compression</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Element</th><th>Full Content</th><th>Compressed Representation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Makefile</strong></td><td>200 lines</td><td>"Uses GCC ARM, -O2 optimization, -Wall warnings"</td></tr>
+      <tr><td><strong>CMakeLists.txt</strong></td><td>150 lines</td><td>"CMake project, targets STM32F4, includes HAL"</td></tr>
+      <tr><td><strong>Linker Script</strong></td><td>100 lines</td><td>"64KB Flash, 8KB RAM, sections: .text, .data, .bss"</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 6: TASK-SCOPED PATTERNS ===================== -->
+<div class="tab-content" id="tab-patterns">
+  <h2 class="section-title">Task-Scoped Context Patterns</h2>
+  <p class="section-sub">Three patterns for structuring context based on the type of engineering task.</p>
+
+  <!-- Pattern 1: New Feature -->
+  <div class="pattern-card">
+    <h3><span class="pattern-tag" style="background:#e3f2fd;color:#1565c0">&#x1F680; New Feature</span> Implementation Pattern</h3>
+    <p style="font-size:.88rem;color:var(--muted)">Use when implementing new functionality. Context flows from specification outward.</p>
+    <div class="pattern-steps">
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#1565c0">1</div>
+        <div><strong>Feature Specification</strong> — Requirements, acceptance criteria, constraints</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#2e7d32">2</div>
+        <div><strong>Affected Interfaces</strong> — Header files, HAL boundaries, data structures</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#ff8f00">3</div>
+        <div><strong>Existing Patterns</strong> — Similar implementations, coding conventions, test patterns</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pattern 2: Bug Fix -->
+  <div class="pattern-card">
+    <h3><span class="pattern-tag" style="background:#ffebee;color:#c62828">&#x1F41B; Bug Fix</span> / Regression Pattern</h3>
+    <p style="font-size:.88rem;color:var(--muted)">Use when fixing bugs or investigating regressions. Context focuses on the problem and its history.</p>
+    <div class="pattern-steps">
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#c62828">1</div>
+        <div><strong>Error Description</strong> — Symptom + reproduction steps</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#e65100">2</div>
+        <div><strong>Affected Code</strong> — Function with bug + related tests</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#6a1b9a">3</div>
+        <div><strong>History</strong> — Recent changes, commit log, regression source</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#1565c0">4</div>
+        <div><strong>Constraints</strong> — Timing, memory, backward compatibility</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pattern 3: Refactoring -->
+  <div class="pattern-card">
+    <h3><span class="pattern-tag" style="background:#e8f5e9;color:#2e7d32">&#x1F527; Refactoring</span> Pattern</h3>
+    <p style="font-size:.88rem;color:var(--muted)">Use when restructuring code. Context defines current state, target state, and safety boundaries.</p>
+    <div class="pattern-steps">
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#c62828">1</div>
+        <div><strong>Current State</strong> — Function/file to refactor, current behavior, known issues</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#2e7d32">2</div>
+        <div><strong>Target State</strong> — Desired behavior, quality goals, constraints</div>
+      </div>
+      <div class="pattern-step">
+        <div class="step-icon" style="background:#ff8f00">3</div>
+        <div><strong>Safety Boundaries</strong> — Interface contracts to preserve, tests to maintain</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Prompt-Only vs Context-Engineered</h3>
+  <div class="compare-panels">
+    <div class="compare-panel old">
+      <h3>&#x274C; Prompt-Only</h3>
+      <p style="font-size:.85rem;margin-bottom:8px"><em>"Write a UART driver"</em></p>
+      <ul>
+        <li>No repository structure</li>
+        <li>No HAL boundaries</li>
+        <li>No coding standards</li>
+        <li>No existing patterns</li>
+      </ul>
+      <p style="font-size:.82rem;margin-top:8px;color:var(--muted)">Result: Generic, may not match project conventions</p>
+    </div>
+    <div class="compare-panel new">
+      <h3>&#x2705; Context-Engineered</h3>
+      <p style="font-size:.85rem;margin-bottom:8px"><em>"Write a UART driver"</em></p>
+      <ul>
+        <li>uart.h (interface)</li>
+        <li>hal.h (HAL API)</li>
+        <li>coding_standards.md</li>
+        <li>similar_driver.c (example)</li>
+      </ul>
+      <p style="font-size:.82rem;margin-top:8px;color:var(--muted)">Result: Targeted, follows project conventions</p>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:1.05rem">Measurable Differences</h3>
+  <table class="cmp-table">
+    <thead><tr><th>Metric</th><th>Prompt-Only</th><th>Context-Engineered</th><th>Improvement</th></tr></thead>
+    <tbody>
+      <tr><td>Code quality</td><td>6/10</td><td>8.5/10</td><td style="color:var(--green);font-weight:700">+42%</td></tr>
+      <tr><td>Iterations to complete</td><td>5-7</td><td>2-3</td><td style="color:var(--green);font-weight:700">-57%</td></tr>
+      <tr><td>Token usage</td><td>12,000</td><td>6,000</td><td style="color:var(--green);font-weight:700">-50%</td></tr>
+      <tr><td>Time to completion</td><td>45 min</td><td>20 min</td><td style="color:var(--green);font-weight:700">-56%</td></tr>
+      <tr><td>Standard compliance</td><td>40%</td><td>95%</td><td style="color:var(--green);font-weight:700">+138%</td></tr>
+      <tr><td>Test coverage</td><td>30%</td><td>80%</td><td style="color:var(--green);font-weight:700">+167%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== TAB 7: SELF-CHECK QUIZ ===================== -->
+<div class="tab-content" id="tab-quiz">
+  <h2 class="section-title">Self-Check Quiz</h2>
+  <p class="section-sub">Test your understanding of Module 03 concepts. Click an answer to check immediately.</p>
+
+  <div class="quiz-container">
+    <div class="quiz-progress">
+      <div class="progress-bar"><div class="progress-fill" id="quizProgressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="quizProgressText">0 / 5 answered</div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="quiz-question" id="q1">
+      <span class="q-num">1</span>
+      <span class="q-text">What is the key difference between prompt engineering and context engineering?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'c')"><span class="opt-letter">A</span> Prompt engineering is for beginners, context engineering is advanced</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'c')"><span class="opt-letter">B</span> Context engineering replaces prompt engineering entirely</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'c')"><span class="opt-letter">C</span> Prompt engineering focuses on HOW you ask; context engineering focuses on WHAT information you provide</div>
+        <div class="quiz-opt" onclick="checkAnswer('q1',this,'c')"><span class="opt-letter">D</span> They are the same thing with different names</div>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-question" id="q2">
+      <span class="q-num">2</span>
+      <span class="q-text">In a typical 8K token budget, what percentage should be allocated to primary (direct task) files?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'b')"><span class="opt-letter">A</span> 25%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'b')"><span class="opt-letter">B</span> 40%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'b')"><span class="opt-letter">C</span> 60%</div>
+        <div class="quiz-opt" onclick="checkAnswer('q2',this,'b')"><span class="opt-letter">D</span> 80%</div>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-question" id="q3">
+      <span class="q-num">3</span>
+      <span class="q-text">Which context compression technique yields the highest token savings (50-70%)?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">A</span> Snippet inclusion — include relevant code snippets only</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">B</span> File selection — only include relevant files</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">C</span> Code summarization — summarize non-critical sections</div>
+        <div class="quiz-opt" onclick="checkAnswer('q3',this,'a')"><span class="opt-letter">D</span> Reference links — link to docs instead of including</div>
+      </div>
+      <div class="quiz-feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-question" id="q4">
+      <span class="q-num">4</span>
+      <span class="q-text">When implementing a new feature, what should be the FIRST layer of context you provide?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">A</span> Coding standards and style guides</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">B</span> Recent git commit history</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">C</span> Architecture documentation</div>
+        <div class="quiz-opt" onclick="checkAnswer('q4',this,'d')"><span class="opt-letter">D</span> Feature specification with requirements and acceptance criteria</div>
+      </div>
+      <div class="quiz-feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-question" id="q5">
+      <span class="q-num">5</span>
+      <span class="q-text">How much can context engineering reduce token usage compared to ad-hoc prompting?</span>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'c')"><span class="opt-letter">A</span> About 10% reduction</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'c')"><span class="opt-letter">B</span> About 25% reduction</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'c')"><span class="opt-letter">C</span> About 50% reduction (from ~12K to ~6K tokens)</div>
+        <div class="quiz-opt" onclick="checkAnswer('q5',this,'c')"><span class="opt-letter">D</span> About 75% reduction</div>
+      </div>
+      <div class="quiz-feedback" id="q5-feedback"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== TAB SWITCHING ==========
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ========== PYRAMID ==========
+function togglePyramid(el) {
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.pyramid-level.active').forEach(p => p.classList.remove('active'));
+  if (!wasActive) el.classList.add('active');
+}
+
+// ========== EXPANDABLE CARDS ==========
+function toggleCard(el) {
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.card.expanded').forEach(c => c.classList.remove('expanded'));
+  if (!wasExpanded) el.classList.add('expanded');
+}
+
+// ========== LAYERS ==========
+function toggleLayer(el) {
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.layer.active').forEach(l => l.classList.remove('active'));
+  if (!wasActive) el.classList.add('active');
+}
+
+// ========== CONTEXT TYPES ==========
+function showCtxTip(el, text) {
+  const box = document.getElementById('ctxTip');
+  box.innerHTML = text;
+  box.classList.add('show');
+  setTimeout(() => box.classList.remove('show'), 6000);
+}
+
+// ========== COMPRESSION ==========
+function showCompressTip(el, text) {
+  document.querySelectorAll('.compress-bar.selected').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  const box = document.getElementById('compressTip');
+  box.innerHTML = text;
+  box.classList.add('show');
+  setTimeout(() => box.classList.remove('show'), 6000);
+}
+
+// ========== QUIZ ==========
+const correctAnswers = { q1: 'C', q2: 'B', q3: 'A', q4: 'D', q5: 'C' };
+const explanations = {
+  q1: { correct: 'Correct! Prompt engineering focuses on HOW you ask (wording, structure, decomposition). Context engineering focuses on WHAT information you provide (repository content, design docs, interfaces). Together they multiply output quality.', wrong: 'Not quite. Prompt engineering = HOW you ask. Context engineering = WHAT information you provide. They work together — context engineering is the multiplier that makes even good prompts produce better results.' },
+  q2: { correct: 'Correct! Primary files (direct task files like source + headers) should get 40% of the token budget (~3,200 tokens). This ensures the model has the core context it needs.', wrong: 'Not quite. Primary files should get 40% of the token budget. The breakdown is: Task 10%, Primary 40%, Secondary 25%, Design/Standards 15%, Response Buffer 10%.' },
+  q3: { correct: 'Correct! Snippet inclusion — including only the relevant code snippets rather than full files — yields 50-70% token savings while preserving the critical context.', wrong: 'Not quite. Snippet inclusion yields the highest savings (50-70%). It works by extracting only the relevant code sections instead of full files.' },
+  q4: { correct: 'Correct! For new features, start with the feature specification — requirements, acceptance criteria, and constraints. This frames the task clearly before providing supporting context.', wrong: 'Not quite. For new feature implementation, the first context layer should be the feature specification: requirements, acceptance criteria, and constraints. This frames the task before adding interfaces, patterns, and standards.' },
+  q5: { correct: 'Correct! Context engineering reduces token usage by about 50% — from ~12,000 tokens (ad-hoc) to ~6,000 tokens (structured context). You get better output with fewer tokens.', wrong: 'Not quite. Context engineering achieves about a 50% reduction in token usage — from ~12,000 tokens with ad-hoc prompting to ~6,000 tokens with structured context, while improving output quality.' }
+};
+let answered = 0;
+
+function checkAnswer(qId, el, correctLetter) {
+  const q = document.getElementById(qId);
+  if (q.classList.contains('answered')) return;
+  q.classList.add('answered');
+  answered++;
+
+  const opts = q.querySelectorAll('.quiz-opt');
+  const selectedLetter = el.querySelector('.opt-letter').textContent;
+  const isCorrect = selectedLetter === correctAnswers[qId];
+
+  opts.forEach(opt => {
+    opt.classList.add('disabled');
+    const letter = opt.querySelector('.opt-letter').textContent;
+    if (letter === correctAnswers[qId]) opt.classList.add('correct');
+  });
+  if (!isCorrect) el.classList.add('wrong');
+
+  const fb = document.getElementById(qId + '-feedback');
+  fb.textContent = isCorrect ? explanations[qId].correct : explanations[qId].wrong;
+  fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+
+  document.getElementById('quizProgressFill').style.width = (answered / 5 * 100) + '%';
+  document.getElementById('quizProgressText').textContent = answered + ' / 5 answered';
+}
+</script>
+</body>
+</html>
